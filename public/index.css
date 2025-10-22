@@ -1,0 +1,49 @@
+:root {
+    color-scheme: light dark;
+    --button-space: 10px;
+    --button-size: 100px;
+}
+
+body {
+    color: light-dark(#222, #eee);
+    background: light-dark(#fff, #121212);
+}
+
+body a {
+    color: light-dark(#0033cc, #809fff);
+}
+
+.button-row {
+    display: flex;
+    height: var(--button-size);
+    margin-top: calc(2 * var(--button-space));
+    justify-content: center;
+}
+
+.key-button {
+    width: var(--button-size);
+    height: var(--button-size);
+    margin-left: var(--button-space);
+    margin-right: var(--button-space);
+}
+
+.arrow {
+    border: solid light-dark(black, white);
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+.arrow-left {
+    transform: rotate(135deg);
+}
+
+.arrow-right {
+    transform: rotate(-45deg);
+}
+.arrow-up {
+    transform: rotate(-135deg);
+}
+.arrow-down {
+    transform: rotate(45deg);
+}

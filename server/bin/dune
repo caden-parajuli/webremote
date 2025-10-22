@@ -1,0 +1,15 @@
+(executable
+ (public_name webremote)
+ (name main)
+ (libraries
+   webremote
+   dream
+   tyxml)
+ (modes byte exe)
+ (preprocess (pps lwt_ppx))
+ )
+
+(env
+  (dev
+    (flags (:standard -warn-error -A))))
+

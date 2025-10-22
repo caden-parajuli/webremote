@@ -1,0 +1,9 @@
+(library
+ (name webremote)
+ (modules keyboard)
+ (libraries unix))
+
+
+(env
+  (dev
+    (flags (:standard -warn-error -A))))

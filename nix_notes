@@ -1,0 +1,1 @@
+set config.environment.variables.YDOTOOL_SOCKET (used by NixOS daemon and client)
