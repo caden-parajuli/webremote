@@ -60,8 +60,9 @@
               ];
               LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
             };
-          packages = {
+          packages = rec {
             webremote = pkgs.callPackage ./package.nix { };
+            default = webremote;
           };
         };
       # );
