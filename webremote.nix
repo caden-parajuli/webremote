@@ -57,7 +57,7 @@ in
     systemd.services.webremote = {
       wantedBy = [ "graphical-user.target" ];
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/webremote";
+        ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port}";
         Restart = "on-failure";
         User = cfg.user;
         Group = cfg.group;

@@ -14,7 +14,9 @@ pkgs.ocamlPackages.buildDunePackage {
   minimalOCamlVersion = "5.3.0";
 
   postInstall = ''
-     mkdir $out/testy
+     mkdir -p ./static
+     cp -r ./public $out/public
+     cp -r ./static $out/static
      '';
 
   nativeBuildInputs = with pkgs; [
