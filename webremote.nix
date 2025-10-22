@@ -65,6 +65,18 @@ in
         StateDirectory = "webremote";
       };
     };
+    users.users = lib.mkIf (cfg.user == "webremote") {
+      webremote = {
+        description = "Webremote service";
+        home = "/var/lib/webremote";
+        group = cfg.group;
+        isSystemUser = true;
+      };
+    };
+
+    users.groups = lib.mkIf (cfg.group == "webremote") {
+      webremote = { };
+    };
 
     programs.ydotool.enable = lib.mkDefault true;
   };
