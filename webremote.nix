@@ -1,22 +1,28 @@
-{ lib, pkgs, config, ... }:
-with lib;                      
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}:
+with lib;
 let
   cfg = config.services.webremote;
   defaultUser = "webremote";
   defaultGroup = "webremote";
-in {
+in
+{
   # Declare what settings a user of this "hello.nix" module CAN SET.
   options.services.webremote = {
-    enable = mkEnableOption "webremote service";
+    enable = mkEnableOption "Enables the webremote service and ydotoold";
 
     package = mkOption {
       type = types.package;
-      default = pkgs.callPackage ./package.nix {};
+      default = pkgs.callPackage ./package.nix { };
     };
 
     user = lib.mkOption {
       default = defaultUser;
-      description = "User bookstack runs as";
+      description = "User webremote runs as";
       type = lib.types.str;
     };
 
@@ -34,13 +40,19 @@ in {
     };
   };
 
-  # Define what other settings, services and resources should be active IF
-  # a user of this "hello.nix" module ENABLED this module 
-  # by setting "services.hello.enable = true;".
   config = mkIf cfg.enable {
-    systemd.services.hello = {
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.ExecStart = "${pkgs.hello}/bin/hello -g'Hello, ${escapeShellArg cfg.greeter}!'";
+    systemd.services.webremote = {
+      wantedBy = [ "graphical-user.target" ];
+      serviceConfig = {
+        ExecStart = "${cfg.package}/bin/webremote";
+        Restart = "on-failure";
+        User = cfg.user;
+        Group = cfg.group;
+        WorkingDirectory = cfg.package;
+        StateDirectory = "webremote";
+      };
     };
+
+    services.ydotool.enable = lib.mkDefault true;
   };
 }
