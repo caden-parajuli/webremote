@@ -66,7 +66,8 @@
           };
         };
 
-    }) // {
+    }) // rec {
       nixosModule = ./webremote.nix;
+      nixosModules.default = nixosModule;
     };
 }

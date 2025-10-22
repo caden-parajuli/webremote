@@ -8,7 +8,7 @@ with lib;
 let
   cfg = config.services.webremote;
   defaultUser = "webremote";
-  defaultGroup = "webremote";
+  defaultGroup = "ydotool";
 in
 {
   # Declare what settings a user of this "hello.nix" module CAN SET.
@@ -27,7 +27,7 @@ in
     };
 
     group = lib.mkOption {
-      default = config.services.ydotool.group;
+      default = config.programs.ydotool.group;
       defaultText = "The same group as ydotool";
       description = "Group webremote runs as. Must have write permission to the ydotool socket";
       type = lib.types.str;
@@ -53,6 +53,6 @@ in
       };
     };
 
-    services.ydotool.enable = lib.mkDefault true;
+    programs.ydotool.enable = lib.mkDefault true;
   };
 }
