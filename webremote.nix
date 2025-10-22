@@ -33,6 +33,19 @@ in
       type = lib.types.str;
     };
 
+    interface = lib.mkOption {
+      default = "0.0.0.0";
+      defaultText = "All interfaces";
+      description = "The interface the webserver listens on";
+      type = lib.types.str;
+    };
+
+    port = lib.mkOption {
+      default = 8008;
+      description = "The port the webserver listens on";
+      type = lib.types.int;
+    };
+
     ydotoolSocket = lib.mkOption {
       default = config.environment.variables.YDOTOOL_SOCKET;
       defaultText = "Same default as ydotool NixOS service";
