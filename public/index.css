@@ -4,6 +4,13 @@
     --button-size: 100px;
 }
 
+@media only screen and (max-width: 768px) {
+    :root {
+        --button-size: 30vmin;
+        --button-space: 1.5vmin;
+    }
+}
+
 body {
     color: light-dark(#222, #eee);
     background: light-dark(#fff, #121212);

@@ -5,6 +5,17 @@ let basePage ~title' ?(headContent = []) ~content () =
   html
     (head (title @@ txt title')
     @@ List.append [ meta ~a:[ a_charset @@ uri_of_string "utf-8" ] () ]
+    @@ List.append
+         [
+           meta
+             ~a:
+               [
+                 a_name @@ uri_of_string "viewport";
+                 a_content
+                 @@ uri_of_string "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no; target-densitydpi=device-dpi";
+               ]
+             ();
+         ]
     @@ headContent)
     (body [ content ])
 
