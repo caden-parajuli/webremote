@@ -13,7 +13,7 @@ let press_key keycode =
   else
     let strcode = string_of_int keycode in
     let command =
-      "YDOTOOL_SOCKET=/tmp/.ydotool_socket ydotool key " ^ strcode ^ ":1 "
+      "ydotool key " ^ strcode ^ ":1 "
       ^ strcode ^ ":0"
     in
     let _ = open_process_out command in
