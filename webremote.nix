@@ -47,9 +47,10 @@ in
     };
 
     ydotoolSocket = lib.mkOption {
+      # default = "/run/ydotoold/socket";
       default = config.environment.variables.YDOTOOL_SOCKET;
       defaultText = "Same default as ydotool NixOS service";
-      description = "Path to the ydotool socket";
+      description = "Sets the YDOTOOL_SOCKET environment variable. This is also by the ydotool NixOS service.";
     };
   };
 
@@ -63,6 +64,7 @@ in
         Group = cfg.group;
         WorkingDirectory = cfg.package;
         StateDirectory = "webremote";
+        Environment = ''"YDOTOOL_SOCKET=${cfg.ydotoolSocket}"'';
       };
     };
     users.users = lib.mkIf (cfg.user == "webremote") {
@@ -78,6 +80,7 @@ in
       webremote = { };
     };
 
-    programs.ydotool.enable = lib.mkDefault true;
+    programs.ydotool.enable = true;
+    environment.variables.YDOTOOL_SOCKET = lib.mkForce cfg.ydotoolSocket;
   };
 }

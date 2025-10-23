@@ -1,3 +1,4 @@
+open Webremote
 open Tyxml.Html
 
 let basePage ~title' ?(headContent = []) ~content () =
