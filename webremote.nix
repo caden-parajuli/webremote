@@ -47,8 +47,7 @@ in
     };
 
     ydotoolSocket = lib.mkOption {
-      # default = "/run/ydotoold/socket";
-      default = config.environment.variables.YDOTOOL_SOCKET;
+      default = "/run/ydotoold/socket";
       defaultText = "Same default as ydotool NixOS service";
       description = "Sets the YDOTOOL_SOCKET environment variable. This is also by the ydotool NixOS service.";
     };
