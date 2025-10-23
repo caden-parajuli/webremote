@@ -14,6 +14,7 @@ pkgs.ocamlPackages.buildDunePackage {
   minimalOCamlVersion = "5.3.0";
 
   postInstall = ''
+     mkdir -p ./public
      mkdir -p ./static
      cp -r ./public $out/public
      cp -r ./static $out/static
@@ -32,6 +33,9 @@ pkgs.ocamlPackages.buildDunePackage {
     ocamlPackages.tyxml
     pkg-config
 
+    ydotool
+  ];
+  propogatedBuildInputs = with pkgs; [
     ydotool
   ];
 }

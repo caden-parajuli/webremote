@@ -20,6 +20,11 @@ in
       default = pkgs.callPackage ./package.nix { };
     };
 
+    ydotoolPackage = mkOption {
+      type = types.package;
+      default = pkgs.ydotool;
+    };
+
     user = lib.mkOption {
       default = defaultUser;
       description = "User webremote runs as";
@@ -56,6 +61,11 @@ in
   config = mkIf cfg.enable {
     systemd.services.webremote = {
       wantedBy = [ "graphical-user.target" ];
+      after =  [ "network-online.target" "multi-user.target"];
+      path = [ cfg.ydotoolPackage ];
+      environment = {
+        YDOTOOL_SOCKET = cfg.ydotoolSocket;
+      };
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port}";
         Restart = "on-failure";
@@ -63,7 +73,6 @@ in
         Group = cfg.group;
         WorkingDirectory = cfg.package;
         StateDirectory = "webremote";
-        Environment = ''"YDOTOOL_SOCKET=${cfg.ydotoolSocket}"'';
       };
     };
     users.users = lib.mkIf (cfg.user == "webremote") {
