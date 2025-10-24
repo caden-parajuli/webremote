@@ -54,14 +54,14 @@ in
     ydotoolSocket = lib.mkOption {
       default = "/run/ydotoold/socket";
       defaultText = "Same default as ydotool NixOS service";
-      description = "Sets the YDOTOOL_SOCKET environment variable. This is also by the ydotool NixOS service.";
+      description = "Sets the YDOTOOL_SOCKET environment variable. This is also used by the ydotool NixOS service.";
     };
   };
 
   config = mkIf cfg.enable {
     systemd.services.webremote = {
       wantedBy = [ "graphical-user.target" ];
-      after =  [ "network-online.target" "multi-user.target"];
+      after =  [ "multi-user.target"];
       path = [ cfg.ydotoolPackage ];
       environment = {
         YDOTOOL_SOCKET = cfg.ydotoolSocket;

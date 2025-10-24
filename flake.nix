@@ -61,13 +61,13 @@
               LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
             };
           packages = rec {
-            webremote = pkgs.callPackage ./package.nix { };
+            webremote = pkgs.callPackage ./nix/package.nix { };
             default = webremote;
           };
         };
 
     }) // rec {
-      nixosModule = ./webremote.nix;
+      nixosModule = ./nix/webremote.nix;
       nixosModules.default = nixosModule;
     };
 }

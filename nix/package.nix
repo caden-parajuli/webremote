@@ -9,7 +9,7 @@ pkgs.ocamlPackages.buildDunePackage {
   pname = "webremote";
   version = "0.1.0";
   
-  src = ./.;
+  src = ./..;
 
   minimalOCamlVersion = "5.3.0";
 
