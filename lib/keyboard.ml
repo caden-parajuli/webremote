@@ -6,6 +6,7 @@ let up = 103
 let left = 105
 let right = 106
 let down = 108
+let back = 14
 
 type key =
   | Up
@@ -13,6 +14,7 @@ type key =
   | Right
   | Down
   | Enter
+  | Back
   | Invalid
 
 let string_of_key key =
@@ -22,6 +24,7 @@ let string_of_key key =
   | Right -> "right"
   | Down -> "down"
   | Enter -> "enter"
+  | Back -> "back"
   | Invalid -> "INVALID_KEY"
 
 let key_of_string key =
@@ -31,6 +34,7 @@ let key_of_string key =
   | "right" -> Right
   | "down" -> Down
   | "enter" -> Enter
+  | "back" -> Enter
   | _ -> Invalid
 
 let display_key key = String.capitalize_ascii @@ string_of_key key
@@ -51,4 +55,5 @@ let getcode key =
   | Up -> up
   | Down -> down
   | Enter -> enter
+  | Back -> back
   | _ -> invalid

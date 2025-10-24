@@ -36,7 +36,7 @@ let keyButton key =
       button
         ~a:[ a_class [ "key-button" ]; a_user_data "key" @@ string_of_key key ]
         [ Arrow.use_svg ~classes:[ "arrow-svg"; "arrow-" ^ string_of_key key ] ]
-  | Enter | Invalid ->
+  | Enter | Back | Invalid ->
       button
         ~a:[ a_class [ "key-button" ]; a_user_data "key" @@ string_of_key key ]
         [ b ~a:[ a_class [ "key-text" ] ] [ txt @@ display_key key ] ]
@@ -59,7 +59,7 @@ let index =
           div
             ~a:[ a_class [ "key-buttons" ] ]
             [
-              div ~a:[ a_class [ "button-row" ] ] [ keyButton Up ];
+              div ~a:[ a_class [ "button-row" ] ] [ div ~a:[a_class ["button-spacer"]] []; keyButton Up; keyButton Back ];
               div
                 ~a:[ a_class [ "button-row" ] ]
                 [ keyButton Left; keyButton Enter; keyButton Right ];
