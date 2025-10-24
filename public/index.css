@@ -16,16 +16,32 @@
 /* } */
 
 html, body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+body {
   color: light-dark(#222, #eee);
   background: light-dark(#fff, #121212);
-  height: 100%
+  display: flex;
+  flex-direction: column;
+  /* overflow: hidden; */
 }
 
-.bottom-content {
+main {
+  flex: 1;
+}
+
+footer {
+  flex: none;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  height: 100%;
+}
+
+footer {
+  bottom: 0;
+  margin-bottom: env(safe-area-inset-bottom);
 }
 
 .key-buttons {
