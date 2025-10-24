@@ -2,27 +2,24 @@
   color-scheme: light dark;
 
   --theme-color: #7ecdf7;
+  --background-color: light-dark(#eee, #222);
 
   --button-space: clamp(2px, 1.5vmin, 12px);
   --button-size: clamp(10px, 25vmin, 160px);
   --arrow-margin: clamp(1px, 1.5vmin, 12px);
-  --button-bg-color: #222;
-  --button-active-bg-color: #333;
+  --button-bg-color: #333;
+  --button-active-bg-color: #444;
 }
-
-/* @media only screen and (max-width: 768px) { */
-/*     :root { */
-/*     } */
-/* } */
 
 html, body {
   padding: 0;
   margin: 0;
   height: 100%;
 }
+
 body {
   color: light-dark(#222, #eee);
-  background: light-dark(#fff, #121212);
+  background: light-dark(#eee, #222);
   display: flex;
   flex-direction: column;
   /* overflow: hidden; */
@@ -44,10 +41,6 @@ footer {
   margin-bottom: env(safe-area-inset-bottom);
 }
 
-.key-buttons {
-    /* margin-bottom: 2em; */
-}
-
 .button-row {
   display: flex;
   height: var(--button-size);
@@ -65,6 +58,21 @@ footer {
 
   color: var(--theme-color);
   background-color: var(--button-bg-color);
+
+  border: none;
+  border-radius: 15%;
+}
+
+.button-spacer {
+  width: var(--button-size);
+  height: var(--button-size);
+  margin-left: var(--button-space);
+  margin-right: var(--button-space);
+
+  container-type: inline-size;
+
+  color: var(--background-color);
+  background-color: var(--background-color);
 
   border: none;
   border-radius: 15%;
