@@ -48,6 +48,7 @@ let index =
       link ~rel:[ `Stylesheet ] ~href:"static/index.css" ();
       script ~a:[ a_src @@ uri_of_string "static/index.js" ] (txt "");
       link ~rel:[ `Manifest ] ~href:"manifest.json" ();
+      link ~rel:[ `Other "apple-touch-icon" ] ~href:"public/icons/icon_x192.png" ();
     ]
   in
   let content =
