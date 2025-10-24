@@ -12,7 +12,10 @@ let basePage ~title' ?(headContent = []) ~content () =
                [
                  a_name @@ uri_of_string "viewport";
                  a_content
-                 @@ uri_of_string "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no; target-densitydpi=device-dpi";
+                 @@ uri_of_string
+                      "width=device-width, initial-scale=1.0, \
+                       maximum-scale=1.0, user-scalable=no; \
+                       target-densitydpi=device-dpi";
                ]
              ();
          ]
@@ -20,13 +23,16 @@ let basePage ~title' ?(headContent = []) ~content () =
     (body [ content ])
 
 let keyButton key =
+  let open Keyboard in
   match key with
-  | "left" | "right" | "up" | "down" ->
+  | Left | Right | Up | Down ->
       button
-        ~a:[ a_class [ "key-button" ]; a_user_data "key" key ]
-        [ i ~a:[ a_class [ "arrow"; "arrow-" ^ key ] ] [] ]
-  | _ ->
-      button ~a:[ a_class [ "key-button" ]; a_user_data "key" key ] [ txt key ]
+        ~a:[ a_class [ "key-button" ]; a_user_data "key" @@ string_of_key key ]
+        [ Arrow.use_svg ~classes:[ "arrow-svg"; "arrow-" ^ string_of_key key ] ]
+  | Enter | Invalid ->
+      button
+        ~a:[ a_class [ "key-button" ]; a_user_data "key" @@ string_of_key key ]
+        [ b ~a:[ a_class [ "key-text" ] ] [ txt @@ display_key key ] ]
 
 let index =
   let title' = "WebRemote" in
@@ -38,13 +44,19 @@ let index =
     ]
   in
   let content =
+    let open Keyboard in
     div
+      ~a:[ a_class [ "bottom-content" ] ]
       [
-        div ~a:[ a_class [ "button-row" ] ] [ keyButton "up" ];
         div
-          ~a:[ a_class [ "button-row" ] ]
-          [ keyButton "left"; keyButton "enter"; keyButton "right" ];
-        div ~a:[ a_class [ "button-row" ] ] [ keyButton "down" ];
+          ~a:[ a_class [ "key-buttons" ] ]
+          [
+            div ~a:[ a_class [ "button-row" ] ] [ keyButton Up ];
+            div
+              ~a:[ a_class [ "button-row" ] ]
+              [ keyButton Left; keyButton Enter; keyButton Right ];
+            div ~a:[ a_class [ "button-row" ] ] [ keyButton Down ];
+          ];
       ]
   in
   basePage ~title' ~headContent ~content ()

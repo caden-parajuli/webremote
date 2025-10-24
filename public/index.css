@@ -1,56 +1,88 @@
 :root {
-    color-scheme: light dark;
-    --button-space: 10px;
-    --button-size: 100px;
+  color-scheme: light dark;
+
+  --theme-color: #7ecdf7;
+
+  --button-space: clamp(2px, 1.5vmin, 12px);
+  --button-size: clamp(10px, 25vmin, 160px);
+  --arrow-margin: clamp(1px, 1.5vmin, 12px);
+  --button-bg-color: #222;
+  --button-active-bg-color: #333;
 }
 
-@media only screen and (max-width: 768px) {
-    :root {
-        --button-size: 30vmin;
-        --button-space: 1.5vmin;
-    }
+/* @media only screen and (max-width: 768px) { */
+/*     :root { */
+/*     } */
+/* } */
+
+html, body {
+  color: light-dark(#222, #eee);
+  background: light-dark(#fff, #121212);
+  height: 100%
 }
 
-body {
-    color: light-dark(#222, #eee);
-    background: light-dark(#fff, #121212);
+.bottom-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
 }
 
-body a {
-    color: light-dark(#0033cc, #809fff);
+.key-buttons {
+    /* margin-bottom: 2em; */
 }
 
 .button-row {
-    display: flex;
-    height: var(--button-size);
-    margin-top: calc(2 * var(--button-space));
-    justify-content: center;
+  display: flex;
+  height: var(--button-size);
+  margin-bottom: calc(2 * var(--button-space));
+  justify-content: center;
 }
 
 .key-button {
-    width: var(--button-size);
-    height: var(--button-size);
-    margin-left: var(--button-space);
-    margin-right: var(--button-space);
+  width: var(--button-size);
+  height: var(--button-size);
+  margin-left: var(--button-space);
+  margin-right: var(--button-space);
+
+  container-type: inline-size;
+
+  color: var(--theme-color);
+  background-color: var(--button-bg-color);
+
+  border: none;
+  border-radius: 15%;
+}
+
+.key-text {
+  font-size: 25cqw;
+}
+
+.key-button:active {
+  background-color: var(--button-active-bg-color);
 }
 
 .arrow {
-    border: solid light-dark(black, white);
-    border-width: 0 3px 3px 0;
-    display: inline-block;
-    padding: 3px;
+  filter: brightness(0) saturate(100%);
+}
+
+.arrow-svg {
+  margin: var(--arrow-margin);
+  fill: var(--theme-color);
+  stroke: var(--theme-color);
 }
 
 .arrow-left {
-    transform: rotate(135deg);
+  transform: rotate(-90deg);
 }
 
 .arrow-right {
-    transform: rotate(-45deg);
+  transform: rotate(90deg);
 }
+
 .arrow-up {
-    transform: rotate(-135deg);
 }
+
 .arrow-down {
-    transform: rotate(45deg);
+  transform: rotate(180deg);
 }

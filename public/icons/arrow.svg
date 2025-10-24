@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="16"
+   height="16"
+   viewBox="0 0 16 16"
+   version="1.1"
+   id="arrow-svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+      id="layer1">
+      <symbol id="arrow-symbol" viewBox="0 0 16 16">
+         <path
+            id="arrow-path"
+            style="fill-opacity:1;stroke-width:1.61481;stroke-linejoin:round"
+            d="M 7.99998,1.30735 C 5.76904,4.04015 3.53811,6.77295 1.30719,9.50575 2.74506,8.76402 4.18294,8.02227 5.62081,7.28053 V 14.6926 H 10.3784 V 7.28053 c 1.4381,0.74174 2.8762,1.48349 4.3144,2.22522 -2.2309,-2.7328 -4.4619,-5.4656 -6.69282,-8.1984 z" />
+      </symbol>
+  </g>
+</svg>

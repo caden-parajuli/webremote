@@ -1,6 +1,4 @@
-open Unix
-open Map
-open Webremote
+(* open Webremote *)
 
 let usage_msg = "usage: webremote [--port <port>] [--interface <interface>]"
 let handle_anon _arg = ()

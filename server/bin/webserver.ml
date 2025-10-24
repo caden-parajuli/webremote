@@ -27,7 +27,7 @@ let handle_req =
           do_debug @@ WindowManager.switch_workspace @@ param req "ws");
       get "/kbd/press/:key" (fun req ->
           let open Keyboard in
-          param req "key" |> getcode |> press_key |> do_debug);
+          param req "key" |> key_of_string |> getcode |> press_key |> do_debug);
       get "/static/**" @@ Dream.static "./public";
       get "/public/**" @@ Dream.static "./public";
     ]
