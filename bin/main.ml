@@ -1,5 +1,3 @@
-(* open Webremote *)
-
 let usage_msg = "usage: webremote [--port <port>] [--interface <interface>]"
 let handle_anon _arg = ()
 let port = ref 8080

@@ -13,7 +13,7 @@ let handle_req =
   router
     [
       get "/" (fun _ ->
-        Templates.index
+        Pages.Index.index
           |> Templates.render
           |> Dream.html
       );
