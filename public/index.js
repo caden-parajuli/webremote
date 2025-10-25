@@ -23,6 +23,9 @@ async function pressKey(key) {
     return sendRequest("/kbd/press/" + key);
 }
 
+/**
+ * Adds key button listeners
+ */
 function addListeners() {
     var keyButtons = document.querySelectorAll(".key-button")
     keyButtons.forEach(keyButton => {
@@ -34,6 +37,9 @@ function addListeners() {
     });
 }
 
+/**
+ * Registers service worker
+ */
 function registerSW() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
@@ -46,6 +52,12 @@ function registerSW() {
     }
 }
 
+
 document.addEventListener('DOMContentLoaded', addListeners);
 window.onload = registerSW
 
+// Prevent scroll on iOS
+window.addEventListener("scroll", (e) => {
+  e.preventDefault();
+  window.scrollTo(0, 0);
+});

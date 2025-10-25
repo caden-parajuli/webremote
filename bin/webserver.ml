@@ -17,6 +17,7 @@ let handle_req =
           |> Templates.render
           |> Dream.html
       );
+      get "/favicon.ico" @@ from_filesystem "./public/icons" "favicon.ico";
       get "/service-worker.js" @@ from_filesystem "./public" "service-worker.js";
       get "/manifest.json" @@ to_manifest @@ from_filesystem "./public" "manifest.json";
       get "/echo/:word" (fun req -> Dream.html @@ param req "word");
