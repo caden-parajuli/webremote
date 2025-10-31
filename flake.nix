@@ -38,6 +38,8 @@
                 dune_3
                 ocamlPackages.ocamlformat
                 ocamlPackages.tyxml
+                ocamlPackages.ctypes
+                ocamlPackages.utop
 
                 # Client
                 nodejs
@@ -51,10 +53,15 @@
                 openssl
                 pkg-config
                 gmp
+
+                libpulseaudio
+                libffi
               ];
               buildInputs = [
                 pkg-config
                 gmp
+                libpulseaudio
+                libffi
 
                 ydotool
               ];

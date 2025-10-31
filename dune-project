@@ -1,5 +1,5 @@
 (lang dune 3.20)
-(using melange 0.1)
+(using ctypes 0.3)
 
 (name webremote)
 
@@ -17,4 +17,9 @@
    (ocaml (>= 5.3.0))
 
    (dream (= 1.0.0~alpha8))
-   (tyxml (>= 4.6.0))))
+   (tyxml (>= 4.6.0))
+   (ctypes (>= 0.23.0))
+   ctypes-foreign
+
+   utop
+   ))

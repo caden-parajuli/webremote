@@ -27,6 +27,16 @@ let string_of_key key =
   | Back -> "back"
   | Invalid -> "INVALID_KEY"
 
+let int_of_key key =
+  match key with
+  | Up -> up
+  | Left -> left
+  | Right -> right
+  | Down -> down
+  | Enter -> enter
+  | Back -> back
+  | Invalid -> invalid
+
 let key_of_string key =
   match key with
   | "up" -> Up
@@ -39,12 +49,12 @@ let key_of_string key =
 
 let display_key key = String.capitalize_ascii @@ string_of_key key
 
-let press_key keycode =
-  if keycode = invalid then
+let press_key key =
+  if key = Invalid then
     ()
   else
-    let strcode = string_of_int keycode in
-    let command = "ydotool key " ^ strcode ^ ":1 " ^ strcode ^ ":0" in
+    let code = string_of_int @@ int_of_key key in
+    let command = "ydotool key " ^ code ^ ":1 " ^ code ^ ":0" in
     let _ = open_process_out command in
     ()
 

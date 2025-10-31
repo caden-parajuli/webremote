@@ -1,23 +1,21 @@
-(* open Sys *)
-open Unix
-module StringMap = Map.Make (String)
+module IntMap = Map.Make (Int)
 
 let workspaces =
-  StringMap.of_list
+  IntMap.of_list
     [
-      ("1", Some "kodi");
-      ("2", None);
-      ("3", None);
-      ("4", None);
-      ("5", None);
-      ("6", None);
-      ("7", None);
-      ("8", None);
-      ("9", None);
-      ("10", None);
+      (1, Some "kodi");
+      (2, None);
+      (3, None);
+      (4, None);
+      (5, None);
+      (6, None);
+      (7, None);
+      (8, None);
+      (9, None);
+      (10, None);
     ]
 
-type window_manager = 
+type window_manager =
   | Sway
   | Hyprland
 
@@ -25,30 +23,31 @@ let home = ref "1"
 let current = ref "1"
 let wm = ref Sway
 
-let die msg =
-  prerr_endline msg;
-  exit 1
-
-let sway_command command =
-  let _ = open_process_out @@ "swaymsg -t command -- ''" ^ command in
+let sway_exec command =
+  let _ = Unix.open_process_out @@ "swaymsg -t command -- ''" ^ command in
   ()
 
-let hypr_command command =
-  let _ = open_process_out @@ "hyprctl dispatch " ^ command in
+let hypr_exec command =
+  let _ = Unix.open_process_out @@ "hyprctl dispatch " ^ command in
   ()
 
-let is_workspace name = Option.is_some @@ StringMap.find_opt name workspaces
+let is_workspace num = Option.is_some @@ IntMap.find_opt num workspaces
+
+let is_empty num =
+  match IntMap.find_opt num workspaces with
+  | None -> false
+  | Some None -> true
+  | Some _ -> false
 
 let switch_workspace name =
   match !wm with
   | Sway ->
       if is_workspace name then
-        sway_command @@ "workspace " ^ name
+        sway_exec @@ "workspace " ^ string_of_int name
       else
         print_endline "Invalid workspace"
   | Hyprland ->
       if is_workspace name then
-        hypr_command @@ "workspace " ^ name
+        hypr_exec @@ "workspace " ^ string_of_int name
       else
         ()
-
