@@ -11,7 +11,6 @@ let
   defaultGroup = "ydotool";
 in
 {
-  # Declare what settings a user of this "hello.nix" module CAN SET.
   options.services.webremote = {
     enable = mkEnableOption "Enables the webremote service and ydotoold";
 
@@ -61,17 +60,21 @@ in
   config = mkIf cfg.enable {
     systemd.services.webremote = {
       wantedBy = [ "graphical-user.target" ];
-      after =  [ "multi-user.target"];
+      after = [ "multi-user.target" ];
+      wants = [
+        "ydotool.service"
+        "network-online.target"
+      ];
       path = [ cfg.ydotoolPackage ];
       environment = {
         YDOTOOL_SOCKET = cfg.ydotoolSocket;
       };
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port}";
+        WorkingDirectory = cfg.package;
         Restart = "on-failure";
         User = cfg.user;
         Group = cfg.group;
-        WorkingDirectory = cfg.package;
         StateDirectory = "webremote";
       };
     };

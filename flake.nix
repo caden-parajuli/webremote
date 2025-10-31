@@ -39,6 +39,7 @@
                 ocamlPackages.ocamlformat
                 ocamlPackages.tyxml
                 ocamlPackages.ctypes
+                ocamlPackages.ctypes-foreign
                 ocamlPackages.utop
 
                 # Client
@@ -48,20 +49,15 @@
                 prettierd
                 typescript
 
-                # Dream deps
-                libev
-                openssl
                 pkg-config
-                gmp
-
-                libpulseaudio
-                libffi
               ];
               buildInputs = [
-                pkg-config
+                libev
+                openssl
                 gmp
-                libpulseaudio
+
                 libffi
+                libpulseaudio
 
                 ydotool
               ];
@@ -74,7 +70,7 @@
         };
 
     }) // rec {
-      nixosModule = ./nix/webremote.nix;
+      nixosModule = ./nix/service.nix;
       nixosModules.default = nixosModule;
     };
 }

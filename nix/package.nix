@@ -1,7 +1,6 @@
 {
   pkgs,
   lib,
-  importNpmLock,
   stdenv,
   ...
 }:
@@ -31,7 +30,10 @@ pkgs.ocamlPackages.buildDunePackage {
     ocamlPackages.lwt_ppx
     ocamlPackages.dream
     ocamlPackages.tyxml
-    pkg-config
+
+    ocamlPackages.ctypes
+    ocamlPackages.ctypes-foreign
+    libpulseaudio
 
     ydotool
   ];
