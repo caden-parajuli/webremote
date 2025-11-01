@@ -60,9 +60,13 @@ in
   config = mkIf cfg.enable {
     systemd.services.webremote = {
       wantedBy = [ "graphical-user.target" ];
-      after = [ "multi-user.target" ];
+      after = [
+        "multi-user.target"
+        "pipewire-pulse.service"
+      ];
       wants = [
-        "ydotool.service"
+        "ydotoold.service"
+        "pipewire-pulse.service"
         "network-online.target"
       ];
       path = [ cfg.ydotoolPackage ];
