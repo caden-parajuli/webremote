@@ -60,7 +60,7 @@ module Functions (F : Ctypes.FOREIGN) = struct
 
   let pa_cvolume_scale =
     foreign "pa_cvolume_scale" @@ ptr pa_cvolume @-> pa_volume_t
-    @|> ptr pa_cvolume
+    @|> ptr_opt pa_cvolume
 
   let pa_cvolume_inc =
     foreign "pa_cvolume_inc" @@ ptr pa_cvolume @-> pa_volume_t

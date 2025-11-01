@@ -1,10 +1,13 @@
 open Templates
-(* open Tyxml_html *)
 
-let use_arrow_svg ~classes =
+let use_arrow_svg key =
   let open Tyxml_svg in
   Tyxml_html.svg
-    ~a:[ a_viewBox (0.0, 0.0, 16.0, 16.0); a_class classes ]
+    ~a:
+      [
+        a_viewBox (0.0, 0.0, 16.0, 16.0);
+        a_class [ "arrow-svg"; "arrow-" ^ Keyboard.string_of_key key ];
+      ]
     [ use ~a:[ a_href "public/icons/arrow.svg#arrow-symbol" ] [] ]
 
 let keyButton key =
@@ -13,11 +16,19 @@ let keyButton key =
   match key with
   | Left | Right | Up | Down ->
       button
-        ~a:[ a_class [ "key-button" ]; a_user_data "key" @@ string_of_key key ]
-        [ use_arrow_svg ~classes:[ "arrow-svg"; "arrow-" ^ string_of_key key ] ]
+        ~a:
+          [
+            a_class [ "btn"; "key-button" ];
+            a_user_data "key" @@ string_of_key key;
+          ]
+        [ use_arrow_svg key ]
   | Enter | Back | Invalid ->
       button
-        ~a:[ a_class [ "key-button" ]; a_user_data "key" @@ string_of_key key ]
+        ~a:
+          [
+            a_class [ "btn"; "key-button" ];
+            a_user_data "key" @@ string_of_key key;
+          ]
         [ b ~a:[ a_class [ "key-text" ] ] [ txt @@ display_key key ] ]
 
 let build_grid (grid : (int * int * Keyboard.key) list) =
@@ -51,7 +62,8 @@ let index =
             a_name "apple-mobile-web-app-status-bar-style"; a_content "default";
           ]
         ();
-      link ~rel:[ `Stylesheet ] ~href:"static/index.css" ();
+      link ~rel:[ `Stylesheet ] ~href:"public/index.css" ();
+      link ~rel:[ `Stylesheet ] ~href:"public/slider.css" ();
       script ~a:[ a_src @@ uri_of_string "static/index.js" ] (txt "");
       link ~rel:[ `Manifest ] ~href:"manifest.json" ();
       (* Favicons *)
@@ -70,32 +82,48 @@ let index =
   let content =
     let open Keyboard in
     [
-      main [ div [] ];
+      main
+        [
+          header [];
+          div
+            [
+              div
+                ~a:[ a_id "volume-level"; a_class [ "volume-text" ] ]
+                [ txt "0" ];
+              div
+                ~a:[ a_class [ "volume-bar" ] ]
+                [
+                  button
+                    ~a:[ a_id "volume-down"; a_class [ "btn"; "volume-btn" ] ]
+                    [ txt "-" ];
+                  input
+                    ~a:
+                      [
+                        a_input_type `Range;
+                        a_input_min (`Number 0);
+                        a_input_max (`Number 100);
+                        a_step (Some 1.0);
+                        a_id "volume-slider";
+                        a_class [ "volume-slider" ];
+                      ]
+                    ();
+                  button
+                    ~a:[ a_id "volume-up"; a_class [ "btn"; "volume-btn" ] ]
+                    [ txt "+" ];
+                ];
+            ];
+        ];
       footer
         [
-          build_grid [
-            0, 1, Up;
-            0, 2, Up;
-            1, 0, Left;
-            1, 1, Enter;
-            1, 2, Right;
-            2, 1, Down;
-          ]
-          (* div *)
-          (*   ~a:[ a_class [ "key-buttons" ] ] *)
-          (*   [ *)
-          (*     div *)
-          (*       ~a:[ a_class [ "button-row" ] ] *)
-          (*       [ *)
-          (*         div ~a:[ a_class [ "button-spacer" ] ] []; *)
-          (*         keyButton Up; *)
-          (*         keyButton Back; *)
-          (*       ]; *)
-          (*     div *)
-          (*       ~a:[ a_class [ "button-row" ] ] *)
-          (*       [ keyButton Left; keyButton Enter; keyButton Right ]; *)
-          (*     div ~a:[ a_class [ "button-row" ] ] [ keyButton Down ]; *)
-          (*   ]; *)
+          build_grid
+            [
+              (0, 1, Up);
+              (0, 2, Back);
+              (1, 0, Left);
+              (1, 1, Enter);
+              (1, 2, Right);
+              (2, 1, Down);
+            ];
         ];
     ]
   in

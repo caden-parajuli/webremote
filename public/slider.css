@@ -1,0 +1,25 @@
+:root {
+  --track-background: light-dark(#ccc, #333);
+  --track-border: light-dark(#222, #ddd);
+}
+
+input[type=range] {
+  /* -webkit-appearance: none; */
+  appearance: none;
+  cursor: pointer;
+
+  accent-color: var(--theme-color);
+  background: linear-gradient(90deg, var(--theme-color) 50%, var(--track-background) 50%);
+  border: 1px solid var(--track-border);
+  border-radius: 9999px;
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 8px;
+  height: 150%;
+  border: 1px solid var(--track-border);
+  border-radius: 9999px;
+  box-shadow: none;
+
+  background: var(--secondary-theme-color);
+}

@@ -2,13 +2,16 @@
   color-scheme: light dark;
 
   --theme-color: #7ecdf7;
+  --secondary-theme-color: #b67ef7;
   --background-color: light-dark(#eee, #222);
 
   --button-space: clamp(2px, 1.5vmin, 12px);
   --button-size: clamp(10px, 25vmin, 160px);
   --arrow-margin: clamp(1px, 1.5vmin, 12px);
-  --button-bg-color: #333;
-  --button-active-bg-color: #444;
+  --button-bg-color: light-dark(#ddd, #333);
+  --button-active-bg-color: light-dark(#ccc, #444);
+
+  --volume-btn-size: clamp(10px, 10vmin, 75px);
 }
 
 html, body {
@@ -41,18 +44,24 @@ footer {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-}
-
-footer {
   bottom: 0;
   margin-bottom: env(safe-area-inset-bottom);
 }
 
-.button-row {
-  display: flex;
-  height: var(--button-size);
-  margin-bottom: calc(2 * var(--button-space));
-  justify-content: center;
+/***********/
+/* Buttons */
+/***********/
+
+.btn {
+  color: var(--theme-color);
+  background-color: var(--button-bg-color);
+
+  border: none;
+  border-radius: 15%;
+}
+
+.btn:active {
+  background-color: var(--button-active-bg-color);
 }
 
 .key-button {
@@ -62,12 +71,17 @@ footer {
   margin-right: var(--button-space);
 
   container-type: inline-size;
+}
 
-  color: var(--theme-color);
-  background-color: var(--button-bg-color);
+.key-text {
+  font-size: 25cqw;
+}
 
-  border: none;
-  border-radius: 15%;
+.button-row {
+  display: flex;
+  height: var(--button-size);
+  margin-bottom: calc(2 * var(--button-space));
+  justify-content: center;
 }
 
 .button-spacer {
@@ -85,13 +99,49 @@ footer {
   border-radius: 15%;
 }
 
-.key-text {
-  font-size: 25cqw;
+.volume-text {
+  display: flex;
+  justify-content: center;
 }
 
-.key-button:active {
-  background-color: var(--button-active-bg-color);
+.volume-bar {
+  display: flex;
+  height: var(--volume-button-size);
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
 }
+
+.volume-text, .volume-btn, .volume-level {
+  color: var(--theme-color);
+  font-size: clamp(1em, 10cqw, 4.5em);
+}
+
+.volume-btn {
+  width: var(--volume-btn-size);
+  height: var(--volume-btn-size);
+  text-align: center;
+  line-height: 0px;
+  margin: 1rem;
+}
+
+
+.volume-slider {
+  appearance: none;
+  flex: 1;
+  flex-grow: 1;
+  flex-shrink: 1;
+  height: calc(0.6 * var(--volume-btn-size));
+}
+
+/* .volume-slider::-ms-track { */
+/*   height: 100px; */
+/* } */
+
+
+/***************/
+/* Arrow icons */
+/***************/
 
 .arrow {
   filter: brightness(0) saturate(100%);

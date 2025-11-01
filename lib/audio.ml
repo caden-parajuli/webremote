@@ -123,10 +123,15 @@ let arrcpy (dest : 'a Ctypes.carray) (src : 'a Ctypes.carray) =
   done
 
 let int_of_volume_t volume =
-  100 * Unsigned.UInt32.to_int volume / C.Type.pa_volume_norm
+  int_of_float @@ Float.round
+  @@ 100.0
+     *. (float_of_int @@ Unsigned.UInt32.to_int volume)
+     /. float_of_int C.Type.pa_volume_norm
 
 let volume_t_of_int volume =
-  Unsigned.UInt32.of_int (volume * C.Type.pa_volume_norm / 100)
+  Unsigned.UInt32.of_int @@ int_of_float
+  @@ Float.round
+       (float_of_int volume *. float_of_int C.Type.pa_volume_norm /. 100.0)
 
 let get_volume_struct s =
   let open C.Functions in
@@ -164,7 +169,7 @@ let get_volume s =
 
       Some (int_of_volume_t volume)
 
-let set_volume s cvolume =
+let set_volume_struct s cvolume =
   let open Ctypes in
   let open C.Functions in
   let success = Ctypes.allocate Ctypes.int 0 in
@@ -176,12 +181,23 @@ let set_volume s cvolume =
 
   iterate s.mainloop op
 
+let set_volume s volume =
+  let open C.Functions in
+  let* cvolume = get_volume_struct s in
+  let* new_cvolume = pa_cvolume_scale cvolume (volume_t_of_int volume) in
+
+  let success = set_volume_struct s new_cvolume in
+
+  match success with
+  | false -> None
+  | true -> Some (int_of_volume_t @@ pa_cvolume_avg new_cvolume)
+
 let raise_volume s by =
   let open C.Functions in
   let* cvolume = get_volume_struct s in
   let* new_cvolume = pa_cvolume_inc cvolume (volume_t_of_int by) in
 
-  let success = set_volume s new_cvolume in
+  let success = set_volume_struct s new_cvolume in
 
   match success with
   | false -> None
@@ -192,7 +208,7 @@ let lower_volume s by =
   let* cvolume = get_volume_struct s in
   let* new_cvolume = pa_cvolume_dec cvolume (volume_t_of_int by) in
 
-  let success = set_volume s new_cvolume in
+  let success = set_volume_struct s new_cvolume in
 
   match success with
   | false -> None
