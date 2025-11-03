@@ -8,7 +8,7 @@ with lib;
 let
   cfg = config.services.webremote;
   defaultUser = "webremote";
-  defaultGroup = "ydotool";
+  defaultGroup = config.programs.ydotool.group;
 in
 {
   options.services.webremote = {
@@ -27,13 +27,6 @@ in
     user = lib.mkOption {
       default = defaultUser;
       description = "User webremote runs as";
-      type = lib.types.str;
-    };
-
-    group = lib.mkOption {
-      default = config.programs.ydotool.group;
-      defaultText = "The same group as ydotool";
-      description = "Group webremote runs as. Must have write permission to the ydotool socket";
       type = lib.types.str;
     };
 
@@ -58,11 +51,11 @@ in
   };
 
   config = mkIf cfg.enable {
-    systemd.services.webremote = {
-      wantedBy = [ "graphical-user.target" ];
+    systemd.user.services.webremote = {
+      wantedBy = [ "default.target" ];
       after = [
-        "multi-user.target"
         "pipewire-pulse.service"
+        "network-online.target"
       ];
       wants = [
         "ydotoold.service"
@@ -77,22 +70,8 @@ in
         ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port}";
         WorkingDirectory = cfg.package;
         Restart = "on-failure";
-        User = cfg.user;
-        Group = cfg.group;
         StateDirectory = "webremote";
       };
-    };
-    users.users = lib.mkIf (cfg.user == "webremote") {
-      webremote = {
-        description = "Webremote service";
-        home = "/var/lib/webremote";
-        group = cfg.group;
-        isSystemUser = true;
-      };
-    };
-
-    users.groups = lib.mkIf (cfg.group == "webremote") {
-      webremote = { };
     };
 
     programs.ydotool.enable = true;

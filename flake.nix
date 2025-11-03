@@ -67,9 +67,23 @@
             webremote = pkgs.callPackage ./nix/package.nix { };
             default = webremote;
           };
+          checks =
+            let
+              checkArgs = rec {
+                pkgs = nixpkgs.legacyPackages.${system};
+                lib = pkgs.lib;
+
+                inherit self';
+                inherit config;
+              };
+            in
+            {
+              minimal-test = import ./nix/test.nix checkArgs;
+            };
         };
 
-    }) // rec {
+    })
+    // rec {
       nixosModule = ./nix/service.nix;
       nixosModules.default = nixosModule;
     };
