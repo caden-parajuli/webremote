@@ -19,10 +19,6 @@ type key =
   | Down
   | Enter
   | Back
-  | MediaPause
-  | MediaStop
-  | MediaPrevious
-  | MediaNext
   | Invalid
 
 let string_of_key key =
@@ -33,10 +29,6 @@ let string_of_key key =
   | Down -> "down"
   | Enter -> "enter"
   | Back -> "back"
-  | MediaPause -> "pause"
-  | MediaStop -> "stop"
-  | MediaPrevious -> "previous"
-  | MediaNext -> "next"
   | Invalid -> "INVALID_KEY"
 
 let int_of_key key =
@@ -47,10 +39,6 @@ let int_of_key key =
   | Down -> down
   | Enter -> enter
   | Back -> back
-  | MediaPause -> media_pause
-  | MediaStop -> media_stop
-  | MediaPrevious -> media_previous
-  | MediaNext -> media_next
   | Invalid -> invalid
 
 let key_of_string key =
@@ -61,10 +49,6 @@ let key_of_string key =
   | "down" -> Down
   | "enter" -> Enter
   | "back" -> Enter
-  | "pause" -> MediaPause
-  | "stop" -> MediaStop
-  | "previous" -> MediaPrevious
-  | "next" -> MediaNext
   | _ -> Invalid
 
 let display_key key = String.capitalize_ascii @@ string_of_key key
@@ -79,12 +63,3 @@ let press_key key =
     let _ = open_process_out command in
     ()
 
-let getcode key =
-  match key with
-  | Right -> right
-  | Left -> left
-  | Up -> up
-  | Down -> down
-  | Enter -> enter
-  | Back -> back
-  | _ -> invalid

@@ -22,7 +22,7 @@ let keyButton key =
             a_user_data "key" @@ string_of_key key;
           ]
         [ use_arrow_svg key ]
-  | Enter | Back | Invalid | MediaPause | MediaStop | MediaPrevious | MediaNext
+  | Enter | Back | Invalid
     ->
       button
         ~a:

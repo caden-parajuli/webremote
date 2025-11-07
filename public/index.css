@@ -1,7 +1,7 @@
 :root {
   color-scheme: light dark;
 
-  --theme-color: #7ecdf7;
+  --theme-color: light-dark(#38a8e8, #7ecdf7);
   --secondary-theme-color: #b67ef7;
   --background-color: light-dark(#eee, #222);
 
