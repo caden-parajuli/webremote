@@ -12,6 +12,9 @@
   --button-active-bg-color: light-dark(#ccc, #444);
 
   --volume-btn-size: clamp(10px, 10vmin, 75px);
+
+  --media-button-size: clamp(10px, 10vmin, 75px);
+  --media-svg-margin: clamp(1px, 1vmin, 8px);
 }
 
 html, body {
@@ -134,9 +137,32 @@ footer {
   height: calc(0.6 * var(--volume-btn-size));
 }
 
-/* .volume-slider::-ms-track { */
-/*   height: 100px; */
-/* } */
+#media-control-bar {
+  display: flex;
+  height: var(--volume-button-size);
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.media-button {
+  width: var(--volume-btn-size);
+  height: var(--volume-btn-size);
+  font-size: 1rem;
+  font-family: "Lucida Sans Unicode", "Noto Sans";
+  text-align: center;
+  line-height: 0px;
+  margin: 2rem;
+}
+
+.svg {
+  fill: var(--theme-color) !important;
+  stroke: var(--theme-color) !important;
+}
+
+.media-svg {
+  margin: var(--media-svg-margin);
+}
 
 
 /***************/

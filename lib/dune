@@ -3,25 +3,7 @@
 (library
   (name webremote)
   (wrapped false)
-  (libraries unix tyxml ctypes.foreign)
-   ; ctypes backward compatibility shims warn sometimes; suppress them
-   (ctypes
-     (external_library_name libpulse)
-     (build_flags_resolver pkg_config)
-     (headers
-       (include "pulse/pulseaudio.h"))
-     (type_description
-       (instance Type)
-       (functor Type_description))
-     (function_description
-       (concurrency sequential)
-       (instance Functions)
-       (functor Function_description))
-     (generated_types Types_generated)
-     (generated_entry_point C))
-   (flags (:standard -w -9-27))
-  )
-
+  (libraries unix tyxml ctypes.foreign audio mpris))
 
 (env
   (dev

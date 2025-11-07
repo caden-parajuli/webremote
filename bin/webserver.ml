@@ -10,7 +10,7 @@ let to_manifest handler =
   in
   Lwt.return message
 
-let get_volume audio_state _req =
+let get_volume_handler audio_state _req =
   match Audio.get_volume audio_state with
   | None -> Dream.respond ~code:500 ~status:`Internal_Server_Error "-1"
   | Some volume -> Dream.respond @@ string_of_int volume
@@ -20,7 +20,12 @@ let audio_set_handler audio_state audio_function amount =
   | None -> Dream.respond ~code:500 ~status:`Internal_Server_Error "-1"
   | Some new_volume -> Dream.respond @@ string_of_int new_volume
 
-let handle_req audio_state =
+let result_handler f arg _req =
+  match f arg with
+  | Error e -> Dream.respond ~code:500 ~status:`Internal_Server_Error e
+  | Ok _ -> Dream.respond @@ ""
+
+let handle_req audio_state mpris_connection =
   let open Dream in
   router
   (* Static *)
@@ -55,8 +60,8 @@ let handle_req audio_state =
   (* Audio *)
   @ [
       (* Get *)
-      get "/volume" @@ get_volume audio_state;
-      get "/volume/get" @@ get_volume audio_state;
+      get "/volume" @@ get_volume_handler audio_state;
+      get "/volume/get" @@ get_volume_handler audio_state;
       (* Set *)
       get "/volume/set/:amount" (fun req ->
           match int_of_string_opt @@ param req "amount" with
@@ -84,4 +89,11 @@ let handle_req audio_state =
                 "arument must be a number"
           | Some amount ->
               audio_set_handler audio_state Audio.lower_volume amount);
+    ]
+  (* Mpris *)
+  @ [
+      get "/pause" @@ result_handler Mpris.pause mpris_connection;
+      get "/play" @@ result_handler Mpris.play mpris_connection;
+      get "/playpause" @@ result_handler Mpris.play_pause mpris_connection;
+      get "/stop" @@ result_handler Mpris.play_pause mpris_connection;
     ]

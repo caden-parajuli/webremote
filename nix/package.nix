@@ -34,6 +34,7 @@ pkgs.ocamlPackages.buildDunePackage {
     ocamlPackages.ctypes
     ocamlPackages.ctypes-foreign
     libpulseaudio
+    dbus
 
     ydotool
   ];

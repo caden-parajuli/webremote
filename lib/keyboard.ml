@@ -7,6 +7,10 @@ let left = 105
 let right = 106
 let down = 108
 let back = 14
+let media_pause = 162
+let media_previous = 144
+let media_next = 145
+let media_stop = 164
 
 type key =
   | Up
@@ -15,6 +19,10 @@ type key =
   | Down
   | Enter
   | Back
+  | MediaPause
+  | MediaStop
+  | MediaPrevious
+  | MediaNext
   | Invalid
 
 let string_of_key key =
@@ -25,6 +33,10 @@ let string_of_key key =
   | Down -> "down"
   | Enter -> "enter"
   | Back -> "back"
+  | MediaPause -> "pause"
+  | MediaStop -> "stop"
+  | MediaPrevious -> "previous"
+  | MediaNext -> "next"
   | Invalid -> "INVALID_KEY"
 
 let int_of_key key =
@@ -35,6 +47,10 @@ let int_of_key key =
   | Down -> down
   | Enter -> enter
   | Back -> back
+  | MediaPause -> media_pause
+  | MediaStop -> media_stop
+  | MediaPrevious -> media_previous
+  | MediaNext -> media_next
   | Invalid -> invalid
 
 let key_of_string key =
@@ -45,6 +61,10 @@ let key_of_string key =
   | "down" -> Down
   | "enter" -> Enter
   | "back" -> Enter
+  | "pause" -> MediaPause
+  | "stop" -> MediaStop
+  | "previous" -> MediaPrevious
+  | "next" -> MediaNext
   | _ -> Invalid
 
 let display_key key = String.capitalize_ascii @@ string_of_key key
@@ -53,6 +73,7 @@ let press_key key =
   if key = Invalid then
     ()
   else
+    print_endline @@ string_of_key key;
     let code = string_of_int @@ int_of_key key in
     let command = "ydotool key " ^ code ^ ":1 " ^ code ^ ":0" in
     let _ = open_process_out command in

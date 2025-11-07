@@ -157,6 +157,7 @@ module Types (F : Ctypes.TYPE) = struct
   let defer_free = field pa_mainloop_api "defer_free" @@ ptr void
   let defer_set_destroy = field pa_mainloop_api "defer_set_destroy" @@ ptr void
   let quit = field pa_mainloop_api "quit" @@ ptr void
+  let () = seal pa_mainloop_api
 
   type pa_cvolume
 

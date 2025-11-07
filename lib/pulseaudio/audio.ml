@@ -37,7 +37,9 @@ let iterate mainloop op =
 
 let new_context mainloop mainloop_api =
   let open C.Functions in
+
   let context = pa_context_new mainloop_api "WebRemote" in
+  Gc.finalise (fun c -> pa_context_unref c) context;
 
   (* We need a callback to tell us when context is connected *)
   let is_done = Ctypes.allocate Ctypes.bool false in
@@ -55,7 +57,7 @@ let new_context mainloop mainloop_api =
   in
   let () =
     pa_context_set_state_callback context state_cb
-      (Ctypes.coerce (Ctypes.ptr Ctypes.bool) (Ctypes.ptr Ctypes.void) is_done)
+      (Ctypes.to_voidp is_done)
   in
 
   if pa_context_connect context None C.Type.PA_CONTEXT_NOFLAGS None < 0 then
@@ -84,12 +86,12 @@ let get_default_sink_name mainloop context =
   let sink_name = allocate string "" in
 
   let server_info_cb context server_info data =
-    let name_ptr = coerce (ptr void) (ptr string) data in
+    let name_ptr = from_voidp string data in
     name_ptr <-@ getf !@server_info C.Type.default_sink_name
   in
   let op =
     pa_context_get_server_info context server_info_cb
-    @@ coerce (ptr string) (ptr void) sink_name
+    @@ to_voidp sink_name
   in
 
   match iterate mainloop op with

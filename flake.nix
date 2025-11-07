@@ -58,6 +58,7 @@
 
                 libffi
                 libpulseaudio
+                dbus
 
                 ydotool
               ];

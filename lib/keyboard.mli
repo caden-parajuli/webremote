@@ -7,6 +7,10 @@ type key =
   | Down
   | Enter
   | Back
+  | MediaPause
+  | MediaStop
+  | MediaPrevious
+  | MediaNext
   | Invalid
 
 val string_of_key : key -> string

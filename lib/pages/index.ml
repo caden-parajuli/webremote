@@ -1,14 +1,14 @@
 open Templates
 
-let use_arrow_svg key =
+let use_svg href classes =
   let open Tyxml_svg in
   Tyxml_html.svg
-    ~a:
-      [
-        a_viewBox (0.0, 0.0, 16.0, 16.0);
-        a_class [ "arrow-svg"; "arrow-" ^ Keyboard.string_of_key key ];
-      ]
-    [ use ~a:[ a_href "public/icons/arrow.svg#arrow-symbol" ] [] ]
+    ~a:[ a_viewBox (0.0, 0.0, 16.0, 16.0); a_class classes ]
+    [ use ~a:[ a_href href ] [] ]
+
+let use_arrow_svg key =
+  use_svg "public/icons/arrow.svg#arrow-symbol"
+    [ "arrow-svg"; "arrow-" ^ Keyboard.string_of_key key ]
 
 let keyButton key =
   let open Tyxml_html in
@@ -22,7 +22,8 @@ let keyButton key =
             a_user_data "key" @@ string_of_key key;
           ]
         [ use_arrow_svg key ]
-  | Enter | Back | Invalid ->
+  | Enter | Back | Invalid | MediaPause | MediaStop | MediaPrevious | MediaNext
+    ->
       button
         ~a:
           [
@@ -79,6 +80,55 @@ let index =
         ();
     ]
   in
+  let volume_control_bar =
+    div
+      ~a:[ a_class [ "volume-bar" ] ]
+      [
+        button
+          ~a:[ a_id "volume-down"; a_class [ "btn"; "volume-btn" ] ]
+          [ txt "-" ];
+        input
+          ~a:
+            [
+              a_input_type `Range;
+              a_input_min (`Number 0);
+              a_input_max (`Number 100);
+              a_step (Some 1.0);
+              a_id "volume-slider";
+              a_class [ "volume-slider" ];
+            ]
+          ();
+        button
+          ~a:[ a_id "volume-up"; a_class [ "btn"; "volume-btn" ] ]
+          [ txt "+" ];
+      ]
+  in
+  let media_control_bar =
+    div
+      ~a:[ a_id "media-control-bar" ]
+      [
+        button
+          ~a:
+            [
+              a_id "play-pause-button";
+              a_title "Pause/Play";
+              a_class [ "btn"; "media-button" ];
+            ]
+          [
+            use_svg "/public/icons/pause_play.svg#pause-play"
+              [ "svg"; "media-svg" ];
+          ];
+        button
+          ~a:
+            [
+              a_id "stop-button";
+              a_title "Stop";
+              a_class [ "btn"; "media-button" ];
+            ]
+          [ use_svg "/public/icons/stop.svg#stop" [ "svg"; "media-svg" ] ];
+      ]
+  in
+
   let content =
     let open Keyboard in
     [
@@ -87,30 +137,12 @@ let index =
           header [];
           div
             [
+              (* Volume level (percentage) label *)
               div
                 ~a:[ a_id "volume-level"; a_class [ "volume-text" ] ]
                 [ txt "0" ];
-              div
-                ~a:[ a_class [ "volume-bar" ] ]
-                [
-                  button
-                    ~a:[ a_id "volume-down"; a_class [ "btn"; "volume-btn" ] ]
-                    [ txt "-" ];
-                  input
-                    ~a:
-                      [
-                        a_input_type `Range;
-                        a_input_min (`Number 0);
-                        a_input_max (`Number 100);
-                        a_step (Some 1.0);
-                        a_id "volume-slider";
-                        a_class [ "volume-slider" ];
-                      ]
-                    ();
-                  button
-                    ~a:[ a_id "volume-up"; a_class [ "btn"; "volume-btn" ] ]
-                    [ txt "+" ];
-                ];
+              volume_control_bar;
+              media_control_bar;
             ];
         ];
       footer

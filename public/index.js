@@ -94,6 +94,23 @@ async function getVolume() {
 }
 
 /**
+ * @param {RequestInfo | URL} url
+ * @returns {Promise<string>} - volume level or "Unkown"
+ */
+async function call_mpris(url) {
+    let response = await fetch(url, { method: "GET" })
+    if (response.ok) {
+        return await response.text();
+    } else if (response.status == 500) {
+        console.error("Server Mpris error. Check backend logs.");
+        return "FAIL";
+    } else {
+        console.error("Error. Status: " + String(response.status));
+        return "FAIL";
+    }
+}
+
+/**
  * @param {string | number} volume
  */
 function updateVolumeText(volume) {
@@ -110,12 +127,23 @@ async function pollVolume() {
 }
 
 /**
+ * @param {Element | null} el
+ * @param {string} ev
+ * @param {any} f
+ */
+function addListenerIfNotNull(el, ev, f) {
+    if (el != null) {
+        el.addEventListener(ev, f);
+    }
+}
+
+/**
  * Adds key button listeners
  */
 function addListeners() {
     var keyButtons = document.querySelectorAll(".key-button")
     keyButtons.forEach(keyButton => {
-        keyButton.addEventListener("click", function (_) {
+        addListenerIfNotNull(keyButton, "click", function (_) {
             pressKey(this.dataset.key);
         });
         // @ts-ignore
@@ -152,10 +180,10 @@ function addSliderListener() {
     sliders.forEach(rangeInput => {
         // @ts-ignore
         fixSliderStyle(rangeInput);
-        rangeInput.addEventListener('input', function () { fixSliderStyle(this) });
+        addListenerIfNotNull(rangeInput, 'input', function () { fixSliderStyle(this) });
     });
     const volumeSlider = document.getElementById("volume-slider");
-    volumeSlider.addEventListener("change", (event) => {
+    addListenerIfNotNull(volumeSlider, "change", (event) => {
         // @ts-ignore
         let value = event.target.value;
         setVolume(Number(value));
@@ -163,13 +191,33 @@ function addSliderListener() {
 }
 
 function setVolumeControlHandlers() {
-    document.getElementById("volume-down").addEventListener("click", function () {
+    addListenerIfNotNull(document.getElementById("volume-down"), "click", function () {
         adjustVolume(-5);
     });
-    document.getElementById("volume-up").addEventListener("click", function () {
+    addListenerIfNotNull(document.getElementById("volume-up"), "click", function () {
         adjustVolume(5);
     });
 }
+
+function setMediaControlHandlers() {
+    addListenerIfNotNull(document.getElementById("play-button"), "click", function () {
+        call_mpris("/play");
+    });
+    addListenerIfNotNull(document.getElementById("pause-button"), "click", function () {
+        call_mpris("/pause");
+    });
+    addListenerIfNotNull(document.getElementById("play-pause-button"), "click", function () {
+        call_mpris("/playpause");
+    });
+    addListenerIfNotNull(document.getElementById("stop-button"), "click", function () {
+        call_mpris("/stop");
+    });
+}
+
+
+//
+// Main
+//
 
 function onContentLoad() {
     pollVolume();
@@ -178,6 +226,7 @@ function onContentLoad() {
     addSliderListener();
 
     setVolumeControlHandlers();
+    setMediaControlHandlers();
     addListeners();
 }
 

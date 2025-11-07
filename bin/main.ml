@@ -14,12 +14,16 @@ let die message =
   exit 1
 
 let () =
-  let open Dream in
-  let () = Arg.parse speclist handle_anon usage_msg in
+let open Dream in
+let () = Arg.parse speclist handle_anon usage_msg in
 
-  match Audio.init () with
-  | None -> die "Could not connect to PulseAudio"
-  | Some audio_state ->
-      Webserver.handle_req audio_state
-      |> logger
-      |> run ~interface:!interface ~port:!port
+match Audio.init () with
+| None -> die "Could not connect to PulseAudio"
+| Some audio_state ->
+
+  match Webremote.Mpris.connect () with
+  | None -> die "Could not connect to DBus"
+  | Some mpris_connection -> 
+    Webserver.handle_req audio_state mpris_connection
+    |> logger
+    |> run ~interface:!interface ~port:!port
