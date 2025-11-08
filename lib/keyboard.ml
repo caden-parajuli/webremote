@@ -6,11 +6,7 @@ let up = 103
 let left = 105
 let right = 106
 let down = 108
-let back = 14
-let media_pause = 162
-let media_previous = 144
-let media_next = 145
-let media_stop = 164
+let back = 1 (* esc *)
 
 type key =
   | Up
@@ -48,7 +44,7 @@ let key_of_string key =
   | "right" -> Right
   | "down" -> Down
   | "enter" -> Enter
-  | "back" -> Enter
+  | "back" -> Back
   | _ -> Invalid
 
 let display_key key = String.capitalize_ascii @@ string_of_key key
@@ -58,8 +54,7 @@ let press_key key =
     ()
   else
     print_endline @@ string_of_key key;
-    let code = string_of_int @@ int_of_key key in
-    let command = "ydotool key " ^ code ^ ":1 " ^ code ^ ":0" in
-    let _ = open_process_out command in
-    ()
-
+  let code = string_of_int @@ int_of_key key in
+  let command = "ydotool key " ^ code ^ ":1 " ^ code ^ ":0" in
+  let _ = open_process_out command in
+  ()
