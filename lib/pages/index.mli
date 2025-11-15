@@ -1,1 +1,1 @@
-val index : [> Html_types.html] Tyxml_html.elt
+val index : Apps.app list -> [> Html_types.html] Tyxml_html.elt

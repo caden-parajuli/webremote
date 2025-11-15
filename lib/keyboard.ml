@@ -49,12 +49,34 @@ let key_of_string key =
 
 let display_key key = String.capitalize_ascii @@ string_of_key key
 
+let key_down key =
+  if key = Invalid then
+    prerr_endline "Tried to press down invalid key"
+  else
+    let code = string_of_int @@ int_of_key key in
+    let command = "ydotool key " ^ code ^ ":1" in
+    close_out_noerr @@ open_process_out command;
+    ()
+
+let key_up key =
+  if key = Invalid then
+    prerr_endline "Tried to lift invalid key"
+  else
+    let code = string_of_int @@ int_of_key key in
+    let command = "ydotool key " ^ code ^ ":0" in
+    close_out_noerr @@ open_process_out command;
+    ()
+
 let press_key key =
   if key = Invalid then
-    ()
+    prerr_endline "Tried to press invalid key"
   else
-    print_endline @@ string_of_key key;
-  let code = string_of_int @@ int_of_key key in
-  let command = "ydotool key " ^ code ^ ":1 " ^ code ^ ":0" in
-  let _ = open_process_out command in
+    let code = string_of_int @@ int_of_key key in
+    let command = "ydotool key " ^ code ^ ":1 " ^ code ^ ":0" in
+    close_out_noerr @@ open_process_out command;
+    ()
+
+let type_string text =
+  let command = "ydotool type '" ^ text ^ "'" in
+  close_out_noerr @@ open_process_out command;
   ()

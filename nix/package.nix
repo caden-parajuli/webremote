@@ -30,6 +30,9 @@ pkgs.ocamlPackages.buildDunePackage {
     ocamlPackages.lwt_ppx
     ocamlPackages.dream
     ocamlPackages.tyxml
+    # ocamlPackages.yojson
+    (callPackage ./yojson-five.nix {})
+    ocamlPackages.directories
 
     ocamlPackages.ctypes
     ocamlPackages.ctypes-foreign

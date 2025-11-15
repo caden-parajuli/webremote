@@ -1,10 +1,14 @@
 :root {
   --track-background: light-dark(#ccc, #333);
   --track-border: light-dark(#222, #ddd);
+
+  /* Webkit doesn't allow percentages for thumb height */
+  --track-height: calc(0.6 * var(--volume-btn-size));
+  --thumb-height: calc(1.5 * var(--track-height));
 }
 
 input[type=range] {
-  /* -webkit-appearance: none; */
+  -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
 
@@ -15,9 +19,21 @@ input[type=range] {
 }
 
 input[type=range]::-moz-range-thumb {
-  width: 8px;
-  height: 150%;
+  appearance: none;
+  width: 10px;
+  height: var(--thumb-height);
   border: 1px solid var(--track-border);
+  border-radius: 9999px;
+  box-shadow: none;
+
+  background: var(--secondary-theme-color);
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: var(--thumb-height);
+  margin-top: 0px;
   border-radius: 9999px;
   box-shadow: none;
 

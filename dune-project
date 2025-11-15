@@ -14,12 +14,14 @@
  (name webremote)
  (synopsis "A web-based remote for your HTPC")
  (depends
-   (ocaml (>= 5.3.0))
+   (ocaml (= 5.3.0))
 
    (dream (= 1.0.0~alpha8))
    (tyxml (>= 4.6.0))
    (ctypes (>= 0.23.0))
    ctypes-foreign
+   yojson-five
+   directories
 
    utop
    ))

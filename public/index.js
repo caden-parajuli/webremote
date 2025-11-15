@@ -1,26 +1,123 @@
+
+/// Async queue to ensure keypress ordering is preserved
+/// Currently uses a pretty inefficient queue implementation with array pushes and shifts
+class FetchQueue {
+    constructor() {
+        this.running = false;
+        this.queue = [];
+    }
+
+    /**
+     * @param {() => any} f
+     * @returns {Promise<any>}
+     */
+    addTask(f) {
+        return new Promise((res, rej) => {
+            const task = async () => {
+                try {
+                    this.running = true;
+                    const result = await f();
+                    res(result);
+                } catch (e) {
+                    rej(e);
+                } finally {
+                    this.running = false;
+                    if (this.queue.length > 0) {
+                        const nextTask = this.queue.shift();
+                        nextTask();
+                    }
+                }
+            }
+
+            if (this.running) {
+                this.queue.push(task);
+            } else {
+                task();
+            }
+        })
+    }
+
+    /**
+     * @param {URL | string} url
+     * @param {string} method
+     * @returns {Promise<Response>}
+     */
+    runFetch(url, method, body=null) {
+        return this.addTask(async () => {
+            let response = await fetch(url, {
+                method: method,
+                body: body,
+            })
+            return response;
+        });
+    }
+}
+
 /**
+ * @param {FetchQueue} queue
+ * @param {string | URL} baseURL
  * @param {string} key
  * @returns {Promise<string>}
  */
-async function pressKey(key) {
-    return await fetch("/kbd/press/" + key, {
-        method: "GET"
-    })
-        .then(response => {
-            if (response.ok) {
-                return response.text();
-            } else {
-                console.error("Fetch error.")
-            }
-        })
-        .then(data => {
-            console.log(data);
-            return data;
-        })
-        .catch(error => {
-            console.error('fetch error: ', error);
-            return undefined;
-        });
+async function callKeyProc(queue, baseURL, key) {
+    let response = await queue.runFetch(baseURL + key, "GET");
+
+    if (response.ok) {
+        let text = await response.text();
+        console.log(text);
+        return text;
+    } else {
+        console.error("Fetch error. Status: " + String(response.status));
+        console.error(await response.text());
+        return undefined;
+    }
+}
+
+/**
+ * @param {FetchQueue} queue
+ * @param {string} key
+ * @returns {Promise<string>}
+ */
+async function pressKey(queue, key) {
+    return callKeyProc(queue, "/kbd/press/", key);
+}
+
+/**
+ * @param {FetchQueue} queue
+ * @param {string} key
+ * @returns {Promise<string>}
+ */
+async function keyDown(queue, key) {
+    return callKeyProc(queue, "/kbd/down/", key);
+}
+
+/**
+ * @param {FetchQueue} queue
+ * @param {string} key
+ * @returns {Promise<string>}
+ */
+async function keyUp(queue, key) {
+    return callKeyProc(queue, "/kbd/up/", key);
+}
+
+
+/**
+ * @param {FetchQueue} queue
+ * @param {string} text - The string to type
+ * @returns {Promise<string>}
+ */
+async function typeString(queue, text) {
+    let response = await queue.runFetch("/kbd/type", "GET", text);
+
+    if (response.ok) {
+        let text = await response.text();
+        console.log(text);
+        return text;
+    } else {
+        console.error("Fetch error. Status: " + String(response.status));
+        console.error(await response.text());
+        return undefined;
+    }
 }
 
 /**
@@ -58,7 +155,6 @@ async function adjustVolume(amount) {
  */
 async function setVolume(value) {
     const url = "/volume/set/" + String(value);
-
     let response = await fetch(url, { method: "GET" })
 
     if (response.ok) {
@@ -77,11 +173,31 @@ async function setVolume(value) {
 }
 
 /**
+ * @param {string} app - App name
+ * @returns {Promise<number>}
+ */
+async function openApp(app) {
+    const url = "/app/open/" + String(app);
+    let response = await fetch(url, { method: "GET" });
+
+    if (response.ok) {
+        return 0;
+
+    } else if (response.status == 500) {
+        console.error("Server volume error. Check backend logs.");
+        return -1;
+    } else {
+        console.error("Error. Status: " + String(response.status));
+        return -1;
+    }
+}
+
+/**
  * @returns {Promise<string>} - volume level or "Unkown"
  */
 async function getVolume() {
     const url = "/volume/get";
-    let response = await fetch(url, { method: "GET" })
+    let response = await fetch(url, { method: "GET" });
     if (response.ok) {
         return await response.text();
     } else if (response.status == 500) {
@@ -97,7 +213,7 @@ async function getVolume() {
  * @param {RequestInfo | URL} url
  * @returns {Promise<string>} - volume level or "Unkown"
  */
-async function call_mpris(url) {
+async function callMpris(url) {
     let response = await fetch(url, { method: "GET" })
     if (response.ok) {
         return await response.text();
@@ -138,13 +254,14 @@ function addListenerIfNotNull(el, ev, f) {
 }
 
 /**
- * Adds key button listeners
+ * Add control/key listeners
  */
-function addListeners() {
+function addControlHandlers() {
+    var queue = new FetchQueue();
     var keyButtons = document.querySelectorAll(".key-button")
     keyButtons.forEach(keyButton => {
         addListenerIfNotNull(keyButton, "click", function (_) {
-            pressKey(this.dataset.key);
+            pressKey(queue, this.dataset.key);
         });
         // @ts-ignore
         console.log("Add handler: " + keyButton.dataset.key);
@@ -152,7 +269,22 @@ function addListeners() {
 }
 
 /**
- * Registers service worker
+ * Add app listeners
+ */
+function addAppHandlers() {
+    var queue = new FetchQueue();
+    var appButtons = document.querySelectorAll(".app-btn")
+    appButtons.forEach(appButton => {
+        addListenerIfNotNull(appButton, "click", function (_) {
+            openApp(this.dataset.app);
+        });
+        // @ts-ignore
+        console.log("Add handler: " + appButton.dataset.app);
+    });
+}
+
+/**
+ * Register service worker
  */
 function registerSW() {
     if ('serviceWorker' in navigator) {
@@ -201,16 +333,16 @@ function setVolumeControlHandlers() {
 
 function setMediaControlHandlers() {
     addListenerIfNotNull(document.getElementById("play-button"), "click", function () {
-        call_mpris("/play");
+        callMpris("/play");
     });
     addListenerIfNotNull(document.getElementById("pause-button"), "click", function () {
-        call_mpris("/pause");
+        callMpris("/pause");
     });
     addListenerIfNotNull(document.getElementById("play-pause-button"), "click", function () {
-        call_mpris("/playpause");
+        callMpris("/playpause");
     });
     addListenerIfNotNull(document.getElementById("stop-button"), "click", function () {
-        call_mpris("/stop");
+        callMpris("/stop");
     });
 }
 
@@ -227,7 +359,8 @@ function onContentLoad() {
 
     setVolumeControlHandlers();
     setMediaControlHandlers();
-    addListeners();
+    addControlHandlers();
+    addAppHandlers();
 }
 
 document.addEventListener('DOMContentLoaded', onContentLoad);

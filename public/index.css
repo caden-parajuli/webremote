@@ -1,20 +1,25 @@
 :root {
   color-scheme: light dark;
 
+  --background-color: light-dark(#eee, #222);
+  --secondary-background-color: light-dark(#e0e0e0, #1b1b1b);
+
   --theme-color: light-dark(#38a8e8, #7ecdf7);
   --secondary-theme-color: #b67ef7;
-  --background-color: light-dark(#eee, #222);
 
-  --button-space: clamp(2px, 1.5vmin, 12px);
-  --button-size: clamp(10px, 25vmin, 160px);
+  --key-btn-space: min(clamp(2px, 1.5vw, 12px), clamp(2px, 0.4vh, 12px));
+  --key-btn-size: min(clamp(10px, 25vw, 160px), clamp(10px, 12vh, 160px));
   --arrow-margin: clamp(1px, 1.5vmin, 12px);
-  --button-bg-color: light-dark(#ddd, #333);
+  --button-bg-color: light-dark(#ccc, #333);
   --button-active-bg-color: light-dark(#ccc, #444);
 
   --volume-btn-size: clamp(10px, 10vmin, 75px);
 
-  --media-button-size: clamp(10px, 10vmin, 75px);
+  --media-btn-size: clamp(10px, 10vmin, 75px);
   --media-svg-margin: clamp(1px, 1vmin, 8px);
+
+  --app-size: calc(var(--key-btn-size) / 2);
+  --app-gap: calc(2 * var(--key-btn-space));
 }
 
 html, body {
@@ -51,9 +56,9 @@ footer {
   margin-bottom: env(safe-area-inset-bottom);
 }
 
-/***********/
-/* Buttons */
-/***********/
+/****************/
+/* Control/Keys */
+/****************/
 
 .btn {
   color: var(--theme-color);
@@ -67,31 +72,27 @@ footer {
   background-color: var(--button-active-bg-color);
 }
 
-.key-button {
-  width: var(--button-size);
-  height: var(--button-size);
-  margin-left: var(--button-space);
-  margin-right: var(--button-space);
+.button-row {
+  display: flex;
+  height: var(--key-btn-size);
+  margin-bottom: calc(2 * var(--key-btn-space));
+  justify-content: center;
+}
+
+.control-button {
+  width: var(--key-btn-size);
+  height: var(--key-btn-size);
+  margin-left: var(--key-btn-space);
+  margin-right: var(--key-btn-space);
 
   container-type: inline-size;
 }
 
-.key-text {
-  font-size: 25cqw;
-}
-
-.button-row {
-  display: flex;
-  height: var(--button-size);
-  margin-bottom: calc(2 * var(--button-space));
-  justify-content: center;
-}
-
-.button-spacer {
-  width: var(--button-size);
-  height: var(--button-size);
-  margin-left: var(--button-space);
-  margin-right: var(--button-space);
+.control-btn-spacer {
+  width: var(--key-btn-size);
+  height: var(--key-btn-size);
+  margin-left: var(--key-btn-space);
+  margin-right: var(--key-btn-space);
 
   container-type: inline-size;
 
@@ -102,6 +103,13 @@ footer {
   border-radius: 15%;
 }
 
+.key-text {
+  font-size: 25cqmin;
+}
+
+
+/* Volume */
+
 .volume-text {
   display: flex;
   justify-content: center;
@@ -109,7 +117,7 @@ footer {
 
 .volume-bar {
   display: flex;
-  height: var(--volume-button-size);
+  height: var(--volume-btn-size);
   flex-direction: row;
   justify-content: space-evenly;
   align-items: center;
@@ -117,7 +125,7 @@ footer {
 
 .volume-text, .volume-btn, .volume-level {
   color: var(--theme-color);
-  font-size: clamp(1em, 10cqw, 4.5em);
+  font-size: clamp(1em, 10cqmin, 4.5em);
 }
 
 .volume-btn {
@@ -139,17 +147,16 @@ footer {
 
 #media-control-bar {
   display: flex;
-  height: var(--volume-button-size);
+  height: var(--media-btn-size);
   flex-direction: row;
   justify-content: center;
   align-items: center;
 }
 
 .media-button {
-  width: var(--volume-btn-size);
-  height: var(--volume-btn-size);
+  width: var(--media-btn-size);
+  height: var(--media-btn-size);
   font-size: 1rem;
-  font-family: "Lucida Sans Unicode", "Noto Sans";
   text-align: center;
   line-height: 0px;
   margin: 2rem;
@@ -162,6 +169,32 @@ footer {
 
 .media-svg {
   margin: var(--media-svg-margin);
+}
+
+
+/***************/
+/*   App Bar   */
+/***************/
+
+#app-bar {
+  display: flex;
+  height: var(--app-size);
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: var(--app-gap);
+
+  padding-top: var(--app-gap);
+  padding-bottom: var(--app-gap);
+
+  background-color: var(--secondary-background-color);
+}
+
+.app-btn {
+  height: var(--app-size);
+  width: var(--app-size);
+  text-align: space-evenly;
+  line-height: 0px;
 }
 
 

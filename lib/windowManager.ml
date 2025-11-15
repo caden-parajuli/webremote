@@ -19,17 +19,21 @@ type window_manager =
   | Sway
   | Hyprland
 
-let home = ref "1"
-let current = ref "1"
+let window_manager_of_string = function
+  | "sway" -> Some Sway
+  | "hyprland" -> Some Hyprland
+  | _ -> None
+
+let home = ref 1
+let current = ref 1
 let wm = ref Sway
 
 let sway_exec command =
-  let _ = Unix.open_process_out @@ "swaymsg -t command -- ''" ^ command in
-  ()
+  close_out_noerr @@ Unix.open_process_out @@ "swaymsg -t command -- ''"
+  ^ command
 
 let hypr_exec command =
-  let _ = Unix.open_process_out @@ "hyprctl dispatch " ^ command in
-  ()
+  close_out_noerr @@ Unix.open_process_out @@ "hyprctl dispatch " ^ command
 
 let is_workspace num = Option.is_some @@ IntMap.find_opt num workspaces
 

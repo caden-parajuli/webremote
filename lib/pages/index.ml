@@ -1,52 +1,24 @@
 open Templates
 
-let use_svg href classes =
-  let open Tyxml_svg in
-  Tyxml_html.svg
-    ~a:[ a_viewBox (0.0, 0.0, 16.0, 16.0); a_class classes ]
-    [ use ~a:[ a_href href ] [] ]
-
-let use_arrow_svg key =
-  use_svg "public/icons/arrow.svg#arrow-symbol"
-    [ "arrow-svg"; "arrow-" ^ Keyboard.string_of_key key ]
-
-let keyButton key =
+let build_app_bar apps =
   let open Tyxml_html in
-  let open Keyboard in
-  match key with
-  | Left | Right | Up | Down ->
-      button
-        ~a:
-          [
-            a_class [ "btn"; "key-button" ];
-            a_user_data "key" @@ string_of_key key;
-          ]
-        [ use_arrow_svg key ]
-  | Enter | Back | Invalid
-    ->
-      button
-        ~a:
-          [
-            a_class [ "btn"; "key-button" ];
-            a_user_data "key" @@ string_of_key key;
-          ]
-        [ b ~a:[ a_class [ "key-text" ] ] [ txt @@ display_key key ] ]
+  let app_button (app : Apps.app) =
+    button
+      ~a:
+        [
+          a_id ("app-btn-" ^ app.name);
+          a_class [ "btn"; "app-btn" ];
+          a_user_data "app" app.name;
+        ]
+      [
+        use_svg
+          ("/public/icons/apps/" ^ app.name ^ ".svg#symbol")
+          [ "svg"; "app-svg" ];
+      ]
+  in
+  div ~a:[ a_id "app-bar" ] @@ List.map app_button apps
 
-let build_grid (grid : (int * int * Keyboard.key) list) =
-  let button_spacer = Tyxml_html.(div ~a:[ a_class [ "button-spacer" ] ] []) in
-  let full_grid = Array.make_matrix 3 3 button_spacer in
-
-  let set (y, x, key) = full_grid.(y).(x) <- keyButton key in
-  let () = List.iter set grid in
-
-  let open Tyxml_html in
-  div ~a:[ a_class [ "key-buttons" ] ]
-  @@ Array.to_list
-  @@ Array.map
-       (fun row -> div ~a:[ a_class [ "button-row" ] ] @@ Array.to_list row)
-       full_grid
-
-let index =
+let index apps =
   let open Tyxml_html in
   let title' = "WebRemote" in
   let headContent =
@@ -147,15 +119,16 @@ let index =
         ];
       footer
         [
-          build_grid
+          build_key_grid
             [
-              (0, 1, Up);
-              (0, 2, Back);
-              (1, 0, Left);
-              (1, 1, Enter);
-              (1, 2, Right);
-              (2, 1, Down);
+              (0, 1, key_button Up);
+              (0, 2, key_button Back);
+              (1, 0, key_button Left);
+              (1, 1, key_button Enter);
+              (1, 2, key_button Right);
+              (2, 1, key_button Down);
             ];
+          build_app_bar apps;
         ];
     ]
   in

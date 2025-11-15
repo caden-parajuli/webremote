@@ -7,8 +7,9 @@
 with lib;
 let
   cfg = config.services.webremote;
-  defaultUser = "webremote";
-  defaultGroup = config.programs.ydotool.group;
+
+  appConfigFormat = pkgs.formats.json { };
+  appConfigFile = appConfigFormat.generate "config.json5" cfg.settings;
 in
 {
   options.services.webremote = {
@@ -24,30 +25,83 @@ in
       default = pkgs.ydotool;
     };
 
-    user = lib.mkOption {
-      default = defaultUser;
-      description = "User webremote runs as";
-      type = lib.types.str;
-    };
-
     interface = lib.mkOption {
+      type = lib.types.str;
       default = "0.0.0.0";
       defaultText = "All interfaces";
       description = "The interface the webserver listens on";
-      type = lib.types.str;
     };
 
     port = lib.mkOption {
+      type = lib.types.port;
       default = 8008;
       description = "The port the webserver listens on";
-      type = lib.types.int;
     };
 
     ydotoolSocket = lib.mkOption {
+      type = types.path;
       default = "/run/ydotoold/socket";
       defaultText = "Same default as ydotool NixOS service";
       description = "Sets the YDOTOOL_SOCKET environment variable. This is also used by the ydotool NixOS service.";
     };
+
+    settings =
+      let
+        appOptions = with lib.types; {
+          options = {
+            name = mkOption {
+              type = str;
+            };
+            pretty_name = mkOption {
+              type = nullOr str;
+              default = null;
+            };
+            launch_command = mkOption {
+              type = str;
+            };
+            icon_path = mkOption {
+              type = nullOr str;
+              default = null;
+            };
+            default_workspace = mkOption {
+              type = nullOr int;
+              default = null;
+            };
+          };
+        };
+        configOpts = with lib.types; {
+          options = {
+            window_manager = mkOption {
+              # todo: enum
+              type = str;
+              default = "sway";
+            };
+            apps = mkOption {
+              type = with lib.types; listOf (submodule appOptions);
+            };
+          };
+        };
+      in
+      lib.mkOption {
+        type = with lib.types; submodule configOpts;
+        default = {
+          window_manager = "sway";
+          apps = [
+            {
+              name = "kodi";
+              pretty_name = "Kodi";
+              launch_command = "kodi";
+              default_workspace = 1;
+            }
+            {
+              name = "youtube";
+              pretty_name = "YouTube";
+              launch_command = "VacuumTube";
+              default_workspace = 2;
+            }
+          ];
+        };
+      };
   };
 
   config = mkIf cfg.enable {
@@ -67,8 +121,9 @@ in
         YDOTOOL_SOCKET = cfg.ydotoolSocket;
       };
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port}";
+        ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port} --config ${appConfigFile}";
         WorkingDirectory = cfg.package;
+        LimitNOFILE = 2048;
         Restart = "on-failure";
         StateDirectory = "webremote";
       };

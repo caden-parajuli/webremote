@@ -36,7 +36,6 @@ pkgs.testers.runNixOSTest {
         webremote = {
           enable = true;
           port = 8000;
-          user = "alice";
         };
 
         pipewire = {

@@ -1,0 +1,16 @@
+(version 0.7)
+
+(build
+ (progn
+  (when
+   %{pkg-self:dev}
+   (run dune subst))
+  (run dune build -p %{pkg-self:name} -j %{jobs} @install)))
+
+(depends dune ocaml fpath)
+
+(source
+ (fetch
+  (url https://github.com/OCamlPro/directories/archive/0.7.tar.gz)
+  (checksum
+   sha256=a7626d412d0f3520eb9c5b1f74b843dd8c95fcfb185979cccc603cea289ccf4a)))

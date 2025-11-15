@@ -3,7 +3,7 @@
 (library
   (name webremote)
   (wrapped false)
-  (libraries unix tyxml ctypes.foreign audio mpris))
+  (libraries unix tyxml ctypes.foreign audio mpris directories yojson-five))
 
 (env
   (dev
