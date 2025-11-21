@@ -107,7 +107,7 @@ async function keyUp(queue, key) {
  * @returns {Promise<string>}
  */
 async function typeString(queue, text) {
-    let response = await queue.runFetch("/kbd/type", "GET", text);
+    let response = await queue.runFetch("/kbd/type", "POST", text);
 
     if (response.ok) {
         let text = await response.text();
@@ -254,6 +254,34 @@ function addListenerIfNotNull(el, ev, f) {
 }
 
 /**
+ * @param {FetchQueue} queue
+ */
+function addKeyboardDialogHandlers(queue) {
+    let keyboard_button = document.getElementById("keyboard-button")
+    let dialog = /** @type {HTMLDialogElement} */ (document.getElementById("keyboard-modal"));
+    let textBox = /** @type {HTMLInputElement} */ (document.getElementById("to-type"));
+    let confirmButton = document.getElementById("keyboard-ok");
+
+    keyboard_button.addEventListener("click", () => {
+        dialog.showModal();
+        confirmButton.focus();
+        textBox.focus();
+    })
+
+    dialog.addEventListener("close", (_) => {
+        let text = dialog.returnValue;
+        if (text !== "") {
+            typeString(queue, text);
+        }
+    });
+
+    confirmButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        dialog.close(textBox.value);
+    });
+}
+
+/**
  * Add control/key listeners
  */
 function addControlHandlers() {
@@ -266,6 +294,8 @@ function addControlHandlers() {
         // @ts-ignore
         console.log("Add handler: " + keyButton.dataset.key);
     });
+
+    addKeyboardDialogHandlers(queue);
 }
 
 /**
@@ -361,6 +391,10 @@ function onContentLoad() {
     setMediaControlHandlers();
     addControlHandlers();
     addAppHandlers();
+
+    // Prevent keyboard causing a viewport resize
+    // @ts-ignore
+    navigator.virtualKeyboard.overlaysContent = true;
 }
 
 document.addEventListener('DOMContentLoaded', onContentLoad);

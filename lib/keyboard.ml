@@ -55,8 +55,7 @@ let key_down key =
   else
     let code = string_of_int @@ int_of_key key in
     let command = "ydotool key " ^ code ^ ":1" in
-    close_out_noerr @@ open_process_out command;
-    ()
+    close_out_noerr @@ open_process_out command
 
 let key_up key =
   if key = Invalid then
@@ -64,8 +63,7 @@ let key_up key =
   else
     let code = string_of_int @@ int_of_key key in
     let command = "ydotool key " ^ code ^ ":0" in
-    close_out_noerr @@ open_process_out command;
-    ()
+    close_out_noerr @@ open_process_out command
 
 let press_key key =
   if key = Invalid then
@@ -73,10 +71,8 @@ let press_key key =
   else
     let code = string_of_int @@ int_of_key key in
     let command = "ydotool key " ^ code ^ ":1 " ^ code ^ ":0" in
-    close_out_noerr @@ open_process_out command;
-    ()
+    close_out_noerr @@ open_process_out command
 
 let type_string text =
-  let command = "ydotool type '" ^ text ^ "'" in
-  close_out_noerr @@ open_process_out command;
-  ()
+  let command = "ydotool type '" ^ text ^ "' -d 2ms" in
+  close_out_noerr @@ open_process_out command

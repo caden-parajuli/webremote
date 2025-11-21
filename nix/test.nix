@@ -36,6 +36,8 @@ pkgs.testers.runNixOSTest {
         webremote = {
           enable = true;
           port = 8000;
+
+          settings.window_manager = "sway";
         };
 
         pipewire = {

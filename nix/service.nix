@@ -10,6 +10,9 @@ let
 
   appConfigFormat = pkgs.formats.json { };
   appConfigFile = appConfigFormat.generate "config.json5" cfg.settings;
+  pulseService = if cfg.usePipewire then "pipewire-pulse.service" else "pulseaudio.service";
+  wmPaths =
+    if cfg.settings.window_manager == "hyprland" then [ config.programs.hyprland.package ] else [ ];
 in
 {
   options.services.webremote = {
@@ -20,20 +23,26 @@ in
       default = pkgs.callPackage ./package.nix { };
     };
 
+    usePipewire = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether the PulseAudio daemon runs through Pipewire. If true, WebRemote will depend on the pipewire-pulse daemon. Otherwise it will depend on the pulseaudio daemon";
+    };
+
     ydotoolPackage = mkOption {
       type = types.package;
       default = pkgs.ydotool;
     };
 
     interface = lib.mkOption {
-      type = lib.types.str;
+      type = types.str;
       default = "0.0.0.0";
       defaultText = "All interfaces";
       description = "The interface the webserver listens on";
     };
 
     port = lib.mkOption {
-      type = lib.types.port;
+      type = types.port;
       default = 8008;
       description = "The port the webserver listens on";
     };
@@ -73,11 +82,29 @@ in
           options = {
             window_manager = mkOption {
               # todo: enum
-              type = str;
+              type = enum [
+                "sway"
+                "hyprland"
+              ];
               default = "sway";
             };
             apps = mkOption {
               type = with lib.types; listOf (submodule appOptions);
+              default = [];
+              example = [
+                {
+                  name = "kodi";
+                  pretty_name = "Kodi";
+                  launch_command = "kodi";
+                  default_workspace = 1;
+                }
+                {
+                  name = "youtube";
+                  pretty_name = "YouTube";
+                  launch_command = "VacuumTube";
+                  default_workspace = 2;
+                }
+              ];
             };
           };
         };
@@ -108,22 +135,21 @@ in
     systemd.user.services.webremote = {
       wantedBy = [ "default.target" ];
       after = [
-        "pipewire-pulse.service"
+        pulseService
         "network-online.target"
       ];
       wants = [
         "ydotoold.service"
-        "pipewire-pulse.service"
+        pulseService
         "network-online.target"
       ];
-      path = [ cfg.ydotoolPackage ];
+      path = [ cfg.ydotoolPackage ] ++ wmPaths;
       environment = {
         YDOTOOL_SOCKET = cfg.ydotoolSocket;
       };
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port} --config ${appConfigFile}";
         WorkingDirectory = cfg.package;
-        LimitNOFILE = 2048;
         Restart = "on-failure";
         StateDirectory = "webremote";
       };

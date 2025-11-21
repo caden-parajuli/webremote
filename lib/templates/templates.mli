@@ -1,12 +1,10 @@
 open Tyxml_html
 
+module ControlButtons : ControlButtons_intf.Intf
+module Modal : Modal_intf.Intf
+
 val render : Tyxml.Html.doc -> string
 val use_svg : uri -> Svg_types.spacestrings -> [> Html_types.svg ] elt
-val key_button : Keyboard.key -> [> Html_types.button ] elt
-
-val build_key_grid :
-  (int * int * [< Html_types.div_content_fun > `Div ] elt) list_wrap ->
-  [> Html_types.div ] elt
 
 val basePage :
   title':uri ->

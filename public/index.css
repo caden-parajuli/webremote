@@ -4,25 +4,26 @@
   --background-color: light-dark(#eee, #222);
   --secondary-background-color: light-dark(#e0e0e0, #1b1b1b);
 
-  --theme-color: light-dark(#38a8e8, #7ecdf7);
+  --theme-color: light-dark(#219ee5, #7ecdf7);
   --secondary-theme-color: #b67ef7;
 
   --key-btn-space: min(clamp(2px, 1.5vw, 12px), clamp(2px, 0.4vh, 12px));
   --key-btn-size: min(clamp(10px, 25vw, 160px), clamp(10px, 12vh, 160px));
   --arrow-margin: clamp(1px, 1.5vmin, 12px);
   --button-bg-color: light-dark(#ccc, #333);
-  --button-active-bg-color: light-dark(#ccc, #444);
+  --button-active-bg-color: light-dark(#bbb, #444);
 
-  --volume-btn-size: clamp(10px, 10vmin, 75px);
+  --volume-btn-size: clamp(10px, 12vmin, 75px);
 
-  --media-btn-size: clamp(10px, 10vmin, 75px);
+  --media-btn-size: clamp(10px, 15vmin, 75px);
   --media-svg-margin: clamp(1px, 1vmin, 8px);
 
   --app-size: calc(var(--key-btn-size) / 2);
   --app-gap: calc(2 * var(--key-btn-space));
 }
 
-html, body {
+html,
+body {
   padding: 0;
   margin: 0;
   height: 100dvh;
@@ -96,7 +97,7 @@ footer {
 
   container-type: inline-size;
 
-  color: var(--background-color);
+  color: transparent;
   background-color: var(--background-color);
 
   border: none;
@@ -106,7 +107,6 @@ footer {
 .key-text {
   font-size: 25cqmin;
 }
-
 
 /* Volume */
 
@@ -123,7 +123,9 @@ footer {
   align-items: center;
 }
 
-.volume-text, .volume-btn, .volume-level {
+.volume-text,
+.volume-btn,
+.volume-level {
   color: var(--theme-color);
   font-size: clamp(1em, 10cqmin, 4.5em);
 }
@@ -136,7 +138,6 @@ footer {
   margin: 1rem;
 }
 
-
 .volume-slider {
   appearance: none;
   flex: 1;
@@ -148,6 +149,7 @@ footer {
 #media-control-bar {
   display: flex;
   height: var(--media-btn-size);
+  margin-top: 10px;
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -170,7 +172,6 @@ footer {
 .media-svg {
   margin: var(--media-svg-margin);
 }
-
 
 /***************/
 /*   App Bar   */
@@ -196,7 +197,6 @@ footer {
   text-align: space-evenly;
   line-height: 0px;
 }
-
 
 /***************/
 /* Arrow icons */
@@ -225,4 +225,48 @@ footer {
 
 .arrow-down {
   transform: rotate(180deg);
+}
+
+/******************/
+/* Keyboard Modal */
+/******************/
+
+dialog {
+  border-radius: 20px;
+  border-color: var(--theme-color);
+  width: clamp(20px, 70dvw, 600px);
+  font-size: 1.5rem;
+}
+
+dialog::backdrop {
+  background-color: #00000050;
+  background-size: cover;
+}
+
+#keyboard-form > *:not(:last-child) {
+  margin-bottom: 10px;
+}
+
+#to-type {
+  width: calc(100% - 10px - 5px);
+  font-size: 1.5rem;
+  padding: 5px;
+}
+
+#to-type-label {
+  color: var(--theme-color);
+}
+
+#keyboard-ok-cancel {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  margin-left: auto;
+  margin-right: 0;
+  gap: 10px;
+}
+
+.modal-btn {
+  font-size: 1.5rem;
+  padding: 5px;
 }

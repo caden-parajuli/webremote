@@ -1,5 +1,3 @@
-open Unix
-
 type key =
   | Up
   | Left
