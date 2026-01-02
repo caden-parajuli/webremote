@@ -3,13 +3,14 @@ use std::{
     process::{Command, Stdio},
 };
 
+use confy::ConfigStrategy;
 use serde::{Deserialize, Serialize};
 
 use crate::wm::WindowManager;
 
-const CONFIG_NAME: &str = "config.toml";
+const CONFIG_NAME: &str = "config";
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct App {
     /// Used in code
     pub name: String,
@@ -65,12 +66,21 @@ impl App {
             Err(Error::new(ErrorKind::Other, "No launch command"))
         }
     }
+
+    pub fn icon_path(&self) -> String {
+        match self.icon_path.clone() {
+            Some(path) => path + "#symbol",
+            None => {
+                format!("/public/icons/apps/{}.svg#symbol", self.name)
+            }
+        }
+    }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    window_manager: WindowManager,
-    apps: Vec<App>,
+    pub window_manager: WindowManager,
+    pub apps: Vec<App>,
 }
 
 impl Default for Config {
@@ -96,5 +106,19 @@ impl Default for Config {
                 ),
             ],
         }
+    }
+}
+
+impl Config {
+    pub fn load(path: Option<String>) -> Self {
+        confy::change_config_strategy(ConfigStrategy::App);
+        match path {
+            Some(path) => confy::load_path(path),
+            None => confy::load("WebRemote", Some(CONFIG_NAME)),
+        }.unwrap_or_else(|_| Self::default())
+    }
+
+    pub fn find_app_by_name<'a>(&'a self, app_name: &str) -> Option<&'a App> {
+        self.apps.iter().find(|&app| app.name == app_name)
     }
 }

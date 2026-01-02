@@ -1,245 +1,128 @@
-
-/// Async queue to ensure keypress ordering is preserved
-/// Currently uses a pretty inefficient queue implementation with array pushes and shifts
-class FetchQueue {
-    constructor() {
-        this.running = false;
-        this.queue = [];
-    }
-
-    /**
-     * @param {() => any} f
-     * @returns {Promise<any>}
-     */
-    addTask(f) {
-        return new Promise((res, rej) => {
-            const task = async () => {
-                try {
-                    this.running = true;
-                    const result = await f();
-                    res(result);
-                } catch (e) {
-                    rej(e);
-                } finally {
-                    this.running = false;
-                    if (this.queue.length > 0) {
-                        const nextTask = this.queue.shift();
-                        nextTask();
-                    }
-                }
-            }
-
-            if (this.running) {
-                this.queue.push(task);
-            } else {
-                task();
-            }
-        })
-    }
-
-    /**
-     * @param {URL | string} url
-     * @param {string} method
-     * @returns {Promise<Response>}
-     */
-    runFetch(url, method, body=null) {
-        return this.addTask(async () => {
-            let response = await fetch(url, {
-                method: method,
-                body: body,
-            })
-            return response;
-        });
-    }
-}
+var volume = 50;
 
 /**
- * @param {FetchQueue} queue
- * @param {string | URL} baseURL
+ * @param {WebSocket} socket
+ * @param {string} event
  * @param {string} key
- * @returns {Promise<string>}
+ * @returns {void}
  */
-async function callKeyProc(queue, baseURL, key) {
-    let response = await queue.runFetch(baseURL + key, "GET");
-
-    if (response.ok) {
-        let text = await response.text();
-        console.log(text);
-        return text;
-    } else {
-        console.error("Fetch error. Status: " + String(response.status));
-        console.error(await response.text());
-        return undefined;
-    }
+function callKeyProc(socket, event, key) {
+    socket.send(JSON.stringify({
+        [event]: {
+            key: key
+        }
+    }));
 }
 
 /**
- * @param {FetchQueue} queue
+ * @param {WebSocket} socket
  * @param {string} key
- * @returns {Promise<string>}
+ * @returns {void}
  */
-async function pressKey(queue, key) {
-    return callKeyProc(queue, "/kbd/press/", key);
+function pushKey(socket, key) {
+    callKeyProc(socket, "PressKey", key);
 }
 
 /**
- * @param {FetchQueue} queue
+ * @param {WebSocket} socket
  * @param {string} key
- * @returns {Promise<string>}
+ * @returns {void}
  */
-async function keyDown(queue, key) {
-    return callKeyProc(queue, "/kbd/down/", key);
+function keyDown(socket, key) {
+    callKeyProc(socket, "PushKey", key);
 }
 
 /**
- * @param {FetchQueue} queue
+ * @param {WebSocket} socket
  * @param {string} key
- * @returns {Promise<string>}
+ * @returns {void}
  */
-async function keyUp(queue, key) {
-    return callKeyProc(queue, "/kbd/up/", key);
+function keyUp(socket, key) {
+    callKeyProc(socket, "ReleaseKey", key);
 }
 
 
 /**
- * @param {FetchQueue} queue
+ * @param {WebSocket} socket
  * @param {string} text - The string to type
- * @returns {Promise<string>}
+ * @returns {void}
  */
-async function typeString(queue, text) {
-    let response = await queue.runFetch("/kbd/type", "POST", text);
-
-    if (response.ok) {
-        let text = await response.text();
-        console.log(text);
-        return text;
-    } else {
-        console.error("Fetch error. Status: " + String(response.status));
-        console.error(await response.text());
-        return undefined;
-    }
+function typeString(socket, text) {
+    socket.send(JSON.stringify({
+        Type: {
+            message: text
+        }
+    }));
 }
 
 /**
- * @param {number} amount
- * @returns {Promise<number>}
+ * @param {WebSocket} socket
+ * @returns {void}
  */
-async function adjustVolume(amount) {
-    var url;
-    if (amount > 0) {
-        url = "/volume/up/" + String(amount);
-    } else {
-        url = "/volume/down/" + String(-amount);
-    }
-
-    let response = await fetch(url, { method: "GET" })
-
-    if (response.ok) {
-        let volume = Number(await response.text());
-        updateVolumeText(volume);
-
-        return volume;
-
-    } else if (response.status == 500) {
-        console.error("Server volume error. Check backend logs.");
-        return -1;
-    } else {
-        console.error("Error. Status: " + String(response.status));
-        return -1;
-    }
+function getVolume(socket) {
+    socket.send(`"GetVolume"`);
 }
 
 /**
+ * @param {WebSocket} socket
  * @param {number} value
- * @returns {Promise<number>}
+ * @returns {void}
  */
-async function setVolume(value) {
-    const url = "/volume/set/" + String(value);
-    let response = await fetch(url, { method: "GET" })
-
-    if (response.ok) {
-        let volume = Number(await response.text());
-        updateVolumeText(volume);
-
-        return volume;
-
-    } else if (response.status == 500) {
-        console.error("Server volume error. Check backend logs.");
-        return -1;
-    } else {
-        console.error("Error. Status: " + String(response.status));
-        return -1;
-    }
+function setVolume(socket, value) {
+    socket.send(JSON.stringify({
+        SetVolume: {
+            value: value
+        }
+    }));
 }
 
 /**
+ * @param {WebSocket} socket
+ * @param {number} amount
+ * @returns {void}
+ */
+function adjustVolume(socket, amount) {
+    socket.send(JSON.stringify({
+        AdjustVolume: {
+            delta: amount
+        }
+    }));
+}
+
+/**
+ * @param {WebSocket} socket
  * @param {string} app - App name
- * @returns {Promise<number>}
+ * @returns {void}
  */
-async function openApp(app) {
-    const url = "/app/open/" + String(app);
-    let response = await fetch(url, { method: "GET" });
-
-    if (response.ok) {
-        return 0;
-
-    } else if (response.status == 500) {
-        console.error("Server volume error. Check backend logs.");
-        return -1;
-    } else {
-        console.error("Error. Status: " + String(response.status));
-        return -1;
-    }
+function openApp(socket, app) {
+    socket.send(JSON.stringify({
+        GotoApp: {
+            name: app
+        }
+    }));
 }
 
-/**
- * @returns {Promise<string>} - volume level or "Unkown"
- */
-async function getVolume() {
-    const url = "/volume/get";
-    let response = await fetch(url, { method: "GET" });
-    if (response.ok) {
-        return await response.text();
-    } else if (response.status == 500) {
-        console.error("Server volume error. Check backend logs.");
-        return "Unknown";
-    } else {
-        console.error("Error. Status: " + String(response.status));
-        return "Unknown";
-    }
-}
 
 /**
- * @param {RequestInfo | URL} url
- * @returns {Promise<string>} - volume level or "Unkown"
+ * @param {WebSocket} socket
+ * @param {String} method
+ * @returns {void}
  */
-async function callMpris(url) {
-    let response = await fetch(url, { method: "GET" })
-    if (response.ok) {
-        return await response.text();
-    } else if (response.status == 500) {
-        console.error("Server Mpris error. Check backend logs.");
-        return "FAIL";
-    } else {
-        console.error("Error. Status: " + String(response.status));
-        return "FAIL";
-    }
+function callMpris(socket, method) {
+    socket.send(JSON.stringify({
+        [method]: {}
+    }));
 }
 
 /**
  * @param {string | number} volume
  */
-function updateVolumeText(volume) {
+function setVolumeText(volume) {
     const textVolume = String(volume);
     document.getElementById("volume-level").innerText = textVolume + "%";
     let slider = /** @type {HTMLInputElement} */ (document.getElementById("volume-slider"));
     slider.value = textVolume;
     fixSliderStyle(slider);
-}
-
-async function pollVolume() {
-    let volume = await getVolume();
-    updateVolumeText(volume);
 }
 
 /**
@@ -254,9 +137,9 @@ function addListenerIfNotNull(el, ev, f) {
 }
 
 /**
- * @param {FetchQueue} queue
+ * @param {WebSocket} socket
  */
-function addKeyboardDialogHandlers(queue) {
+function addKeyboardDialogHandlers(socket) {
     let keyboard_button = document.getElementById("keyboard-button")
     let dialog = /** @type {HTMLDialogElement} */ (document.getElementById("keyboard-modal"));
     let textBox = /** @type {HTMLInputElement} */ (document.getElementById("to-type"));
@@ -271,7 +154,7 @@ function addKeyboardDialogHandlers(queue) {
     dialog.addEventListener("close", (_) => {
         let text = dialog.returnValue;
         if (text !== "") {
-            typeString(queue, text);
+            typeString(socket, text);
         }
     });
 
@@ -283,30 +166,30 @@ function addKeyboardDialogHandlers(queue) {
 
 /**
  * Add control/key listeners
+ * @param {WebSocket} socket
  */
-function addControlHandlers() {
-    var queue = new FetchQueue();
+function addControlHandlers(socket) {
     var keyButtons = document.querySelectorAll(".key-button")
     keyButtons.forEach(keyButton => {
         addListenerIfNotNull(keyButton, "click", function (_) {
-            pressKey(queue, this.dataset.key);
+            pushKey(socket, this.dataset.key);
         });
         // @ts-ignore
         console.log("Add handler: " + keyButton.dataset.key);
     });
 
-    addKeyboardDialogHandlers(queue);
+    addKeyboardDialogHandlers(socket);
 }
 
 /**
  * Add app listeners
+ * @param {WebSocket} socket
  */
-function addAppHandlers() {
-    var queue = new FetchQueue();
+function addAppHandlers(socket) {
     var appButtons = document.querySelectorAll(".app-btn")
     appButtons.forEach(appButton => {
         addListenerIfNotNull(appButton, "click", function (_) {
-            openApp(this.dataset.app);
+            openApp(socket, this.dataset.app);
         });
         // @ts-ignore
         console.log("Add handler: " + appButton.dataset.app);
@@ -314,8 +197,62 @@ function addAppHandlers() {
 }
 
 /**
- * Register service worker
+ * @param {{ value: number|string; style: { background: string; }; }} slider
  */
+function fixSliderStyle(slider) {
+    const percent = (Number(slider.value) / 100) * 100;
+    const gradient = `linear-gradient(90deg, var(--theme-color) ${percent}%, var(--track-background) ${percent}%)`;
+    slider.style.background = gradient;
+}
+
+/**
+ * @param {WebSocket} [socket]
+ */
+function addSliderListener(socket) {
+    const sliders = document.querySelectorAll("input[type=range]");
+    sliders.forEach(rangeInput => {
+        // @ts-ignore
+        fixSliderStyle(rangeInput);
+        addListenerIfNotNull(rangeInput, 'input', function () { fixSliderStyle(this) });
+    });
+    const volumeSlider = document.getElementById("volume-slider");
+    addListenerIfNotNull(volumeSlider, "change", (event) => {
+        // @ts-ignore
+        let value = event.target.value;
+        setVolume(socket, Number(value));
+    });
+}
+
+/**
+ * @param {WebSocket} socket
+ */
+function setVolumeControlHandlers(socket) {
+    addListenerIfNotNull(document.getElementById("volume-down"), "click", function () {
+        adjustVolume(socket, -5);
+    });
+    addListenerIfNotNull(document.getElementById("volume-up"), "click", function () {
+        adjustVolume(socket, 5);
+    });
+}
+
+/**
+ * @param {WebSocket} socket
+ */
+function setMediaControlHandlers(socket) {
+    addListenerIfNotNull(document.getElementById("play-button"), "click", function () {
+        callMpris(socket, "Play");
+    });
+    addListenerIfNotNull(document.getElementById("pause-button"), "click", function () {
+        callMpris(socket, "Pause");
+    });
+    addListenerIfNotNull(document.getElementById("play-pause-button"), "click", function () {
+        callMpris(socket, "PlayPause");
+    });
+    addListenerIfNotNull(document.getElementById("stop-button"), "click", function () {
+        callMpris(socket, "Stop");
+    });
+}
+
 function registerSW() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
@@ -329,79 +266,62 @@ function registerSW() {
 }
 
 /**
- * @param {{ value: number|string; style: { background: string; }; }} slider
+ * @param {{ type: string; level: string | number; }} message
  */
-function fixSliderStyle(slider) {
-    const percent = (Number(slider.value) / 100) * 100;
-    const gradient = `linear-gradient(90deg, var(--theme-color) ${percent}%, var(--track-background) ${percent}%)`;
-    slider.style.background = gradient;
+function handleMessage(message) {
+    if (message.type == "Volume") {
+        setVolumeText(message.level);
+    }
 }
 
-function addSliderListener() {
-    const sliders = document.querySelectorAll("input[type=range]");
-    sliders.forEach(rangeInput => {
-        // @ts-ignore
-        fixSliderStyle(rangeInput);
-        addListenerIfNotNull(rangeInput, 'input', function () { fixSliderStyle(this) });
-    });
-    const volumeSlider = document.getElementById("volume-slider");
-    addListenerIfNotNull(volumeSlider, "change", (event) => {
-        // @ts-ignore
-        let value = event.target.value;
-        setVolume(Number(value));
-    });
-}
+function connectSocket() {
+    let protocol;
+    if (window.location.protocol == "https:") {
+        protocol = "wss://";
+    } else {
+        protocol = "ws://"
+    }
+    const url = protocol + window.location.host + "/ws";
+    const socket = new WebSocket(url);
 
-function setVolumeControlHandlers() {
-    addListenerIfNotNull(document.getElementById("volume-down"), "click", function () {
-        adjustVolume(-5);
+    socket.addEventListener("message", (event) => {
+        const message = JSON.parse(event.data);
+        console.log("Message received: ", message);
+        handleMessage(message);
     });
-    addListenerIfNotNull(document.getElementById("volume-up"), "click", function () {
-        adjustVolume(5);
-    });
-}
 
-function setMediaControlHandlers() {
-    addListenerIfNotNull(document.getElementById("play-button"), "click", function () {
-        callMpris("/play");
+    socket.addEventListener("open", (_event) => {
+        getVolume(socket);
     });
-    addListenerIfNotNull(document.getElementById("pause-button"), "click", function () {
-        callMpris("/pause");
-    });
-    addListenerIfNotNull(document.getElementById("play-pause-button"), "click", function () {
-        callMpris("/playpause");
-    });
-    addListenerIfNotNull(document.getElementById("stop-button"), "click", function () {
-        callMpris("/stop");
-    });
-}
 
+    return socket;
+}
 
 //
 // Main
 //
 
 function onContentLoad() {
-    pollVolume();
-    setInterval(pollVolume, 5 * 1000);
+    const socket = connectSocket();
 
-    addSliderListener();
+    addSliderListener(socket);
 
-    setVolumeControlHandlers();
-    setMediaControlHandlers();
-    addControlHandlers();
-    addAppHandlers();
+    setVolumeControlHandlers(socket);
+    setMediaControlHandlers(socket);
+    addControlHandlers(socket);
+    addAppHandlers(socket);
 
     // Prevent keyboard causing a viewport resize
     // @ts-ignore
-    navigator.virtualKeyboard.overlaysContent = true;
+    // navigator.virtualKeyboard.overlaysContent = true;
+
+    // Prevent scroll on iOS
+    window.addEventListener("scroll", (scroll_event) => {
+        scroll_event.preventDefault();
+        window.scrollTo(0, 0);
+    });
+
 }
 
 document.addEventListener('DOMContentLoaded', onContentLoad);
 window.onload = registerSW
-
-// Prevent scroll on iOS
-window.addEventListener("scroll", (e) => {
-    e.preventDefault();
-    window.scrollTo(0, 0);
-});

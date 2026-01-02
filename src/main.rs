@@ -1,42 +1,48 @@
-mod index;
-pub mod templates;
-pub mod keyboard;
 pub mod apps;
+mod index;
+pub mod keyboard;
+pub mod templates;
 pub mod wm;
+mod webserver;
+mod command_line;
+mod pulse;
+pub mod messages;
 
-use axum::Router;
-use axum::routing::get;
-use mime::Mime;
-use tower_http::services::{ServeDir, ServeFile};
+use std::{path::Path, sync::Arc};
+use axum::extract::ws::Message;
+use tokio::sync::{Mutex, broadcast::{self, Sender}};
 
-use crate::index::index;
+use crate::{apps::Config, pulse::PulseState};
+
+const DIST: &str = "./dist";
+
+#[derive(Debug, Clone)]
+pub struct AppState {
+    config: &'static Config,
+    pulse_state: PulseState,
+    broadcast: Arc<Mutex<Sender<Message>>>
+}
 
 #[tokio::main]
 async fn main() {
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080")
-        .await
-        .expect("Error binding port");
+    tracing_subscriber::fmt::init();
 
-    axum::serve(listener, app().into_make_service())
-        .await
-        .expect("Error starting server");
-}
+    let args = command_line::parse_options();
+    let interface = format!("{}:{}", args.interface, args.port);
 
-fn app() -> Router {
-    let public = ServeDir::new("./public");
+    let dist_dir = if Path::new(DIST).exists() {
+        DIST
+    } else {
+        "./public"
+    };
 
-    let favicon = ServeFile::new("./public/icons/favicon.ico");
-    let service_worker = ServeFile::new("./public/service-worker.js");
-    let manifest = ServeFile::new_with_mime(
-        "./public/manifest.json",
-        &"application/manifest+json".parse::<Mime>().unwrap(),
-    );
+    let config: &'static Config = Box::leak(Box::new(Config::load(args.config)));
+    let pulse_state = PulseState::new().await.unwrap();
 
-    Router::new()
-        .route("/", get(index))
-        .nest_service("/favicon.ico", favicon)
-        .nest_service("/service-worker.js", service_worker)
-        .nest_service("/manifest.json", manifest)
-        .nest_service("/public", public.clone())
-        .nest_service("/static", public)
+    let (tx, _) = broadcast::channel(32);
+    let broadcast = Arc::new(Mutex::new(tx));
+
+    let state = AppState { config, pulse_state, broadcast };
+
+    webserver::serve(state, dist_dir, &interface).await;
 }

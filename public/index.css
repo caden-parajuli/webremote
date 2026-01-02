@@ -1,26 +1,4 @@
-:root {
-  color-scheme: light dark;
-
-  --background-color: light-dark(#eee, #222);
-  --secondary-background-color: light-dark(#e0e0e0, #1b1b1b);
-
-  --theme-color: light-dark(#219ee5, #7ecdf7);
-  --secondary-theme-color: #b67ef7;
-
-  --key-btn-space: min(clamp(2px, 1.5vw, 12px), clamp(2px, 0.4vh, 12px));
-  --key-btn-size: min(clamp(10px, 25vw, 160px), clamp(10px, 12vh, 160px));
-  --arrow-margin: clamp(1px, 1.5vmin, 12px);
-  --button-bg-color: light-dark(#ccc, #333);
-  --button-active-bg-color: light-dark(#bbb, #444);
-
-  --volume-btn-size: clamp(10px, 12vmin, 75px);
-
-  --media-btn-size: clamp(10px, 15vmin, 75px);
-  --media-svg-margin: clamp(1px, 1vmin, 8px);
-
-  --app-size: calc(var(--key-btn-size) / 2);
-  --app-gap: calc(2 * var(--key-btn-space));
-}
+@import "vars.css";
 
 html,
 body {

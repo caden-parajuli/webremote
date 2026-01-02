@@ -1,3 +1,5 @@
+@import "vars.css";
+
 :root {
   --track-background: light-dark(#ccc, #333);
   --track-border: light-dark(#222, #ddd);

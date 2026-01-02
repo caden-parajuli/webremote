@@ -1,4 +1,5 @@
 pub mod control_buttons;
+pub mod modal;
 
 use maud::{DOCTYPE, Markup, PreEscaped, html};
 

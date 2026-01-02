@@ -1,6 +1,12 @@
 use maud::{Markup, html};
 
-use crate::{keyboard::Key, templates::use_svg};
+use crate::{
+    keyboard::Key,
+    templates::{
+        modal::{modal, modal_cancel, modal_ok},
+        use_svg,
+    },
+};
 
 pub fn use_arrow_svg(key: Key) -> Markup {
     let mut keyclass = key.to_string();
@@ -61,4 +67,24 @@ where
             }
         }
     }
+}
+
+pub fn keyboard_dialog() -> Markup {
+    modal(
+        "keyboard-modal",
+        html! {
+            form #keyboard-form method="dialog" {
+                label #to-type-label for="to-type" {
+                    "Type:";
+                }
+                br {};
+                input #to-type name="to-type" input-type="text" value="" placeholder="message" autofocus {
+                }
+                #keyboard-ok-cancel .ok-cancel {
+                    (modal_cancel("keyboard-cancel"));
+                    (modal_ok("keyboard-ok"));
+                }
+            }
+        },
+    )
 }

@@ -5,12 +5,23 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8.8", features = ["ws"] }
+clap = { version = "4.5.53", features = ["derive"] }
+clap_derive = "4.5.49"
 confy = "2.0.0"
+futures-util = "0.3.31"
 maud = { version = "0.27.0", features = ["axum"] }
 mime = "0.3.17"
+pulseaudio = { git = "https://github.com/caden-parajuli/pulseaudio-rs" }
 serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.148"
 shell-words = "1.1.1"
 swayipc = "4.0.0"
 tokio = { version = "1", features = ["full"] }
 tower-http = { version = "0.6.8", features = ["fs"] }
-# evdev = "0.13.2"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.22"
+
+[build-dependencies]
+oxc = { version = "0.106.0", features = ["minifier", "codegen"] }
+lightningcss = { version = "1.0.0-alpha.68", features = [ "bundler" ] }
+parcel_sourcemap = "2"

@@ -1,8 +1,9 @@
-.direnv/
+.direnv
 .envrc
 
 debug
 target
+dist
 
 **/*.rs.bk
 *.pdb

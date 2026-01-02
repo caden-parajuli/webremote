@@ -24,17 +24,27 @@
       with pkgs;
       {
         devShell = mkShell rec {
-          nativeBuildInputs = [ pkg-config ];
+          nativeBuildInputs = [
+            pkg-config
+
+            nodejs
+            emmet-language-server
+            typescript-language-server
+            prettierd
+            typescript
+          ];
           buildInputs = [
+            (rust-bin.stable.latest.default.override {
+              extensions = [
+                "rust-src"
+                "rust-analyzer"
+              ];
+            })
 
-            rust-bin.stable.latest.default
-            # rust-analyzer
-
-            wayland
+            ydotool
           ];
           LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
         };
       }
     );
 }
-

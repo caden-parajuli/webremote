@@ -1,0 +1,182 @@
+use std::{
+    ffi::{CStr, CString},
+    io::BufReader,
+    os::unix::net::UnixStream,
+    sync::Arc,
+};
+
+use pulseaudio::{
+    Client, ClientError,
+    protocol::{self, ChannelVolume, DEFAULT_SINK, ProtocolError, Volume},
+};
+use tokio::sync::Mutex;
+use tracing::info;
+
+const VOLUME_NORM: u32 = 0x10000;
+
+#[derive(Debug, Clone)]
+pub struct PulseState {
+    // client: Client,
+    socket: Arc<BufReader<UnixStream>>,
+    protocol_version: u16,
+    seq: u32
+}
+
+pub enum PulseError {
+    NoSocket,
+    SocketConnect,
+    NoCookie,
+    ClientError(ClientError),
+    ProtocolError(ProtocolError),
+}
+
+impl std::fmt::Debug for PulseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NoSocket => write!(f, "NoSocket"),
+            Self::SocketConnect => write!(f, "SocketConnect"),
+            Self::NoCookie => write!(f, "NoCookie"),
+            Self::ClientError(client_error) => client_error.fmt(f),
+            Self::ProtocolError(protocol_error) => protocol_error.fmt(f),
+        }
+    }
+}
+
+impl From<ClientError> for PulseError {
+    fn from(value: ClientError) -> Self {
+        PulseError::ClientError(value)
+    }
+}
+
+impl From<ProtocolError> for PulseError {
+    fn from(value: ProtocolError) -> Self {
+        PulseError::ProtocolError(value)
+    }
+}
+
+impl PulseState {
+    pub async fn new() -> Result<Self, PulseError> {
+        let socket_path = pulseaudio::socket_path_from_env().ok_or(PulseError::NoSocket)?;
+        let sock =
+            BufReader::new(UnixStream::connect(socket_path).or(Err(PulseError::SocketConnect))?);
+
+        let cookie = pulseaudio::cookie_path_from_env()
+            .and_then(|path| std::fs::read(path).ok())
+            .ok_or(PulseError::NoCookie)?;
+        let auth = protocol::AuthParams {
+            version: protocol::MAX_VERSION,
+            supports_shm: false,
+            supports_memfd: false,
+            cookie,
+        };
+
+        let mut seq = 0;
+
+        // Must authenticate first
+        protocol::write_command_message(
+            sock.get_mut(),
+            seq,
+            &protocol::Command::Auth(auth),
+            protocol::MAX_VERSION,
+        )?;
+        seq += 1;
+
+        let (_, auth_reply) =
+            protocol::read_reply_message::<protocol::AuthReply>(&mut sock, protocol::MAX_VERSION)?;
+        let protocol_version = std::cmp::min(protocol::MAX_VERSION, auth_reply.version);
+
+        Self::set_client_name(sock.get_mut(), protocol_version, &mut seq, c"WebRemote");
+
+        let default_sink_name = DEFAULT_SINK.to_owned();
+
+        // let sink_info = client.sink_info_by_name(default_sink_name).await?;
+        // let default_sink = sink_info.index;
+
+        Ok(PulseState {
+            // client,
+            socket: Arc::new(sock),
+            protocol_version,
+            seq,
+        })
+    }
+
+    async fn set_client_name(
+        socket: Arc<Mutex<BufReader<UnixStream>>>,
+        protocol_version: u16,
+        seq: &mut u32,
+        name: &CStr,
+    ) -> Result<(), PulseError> {
+        // The next step is to set the client name.
+        let mut props = protocol::Props::new();
+        props.set(protocol::Prop::ApplicationName, name);
+        protocol::write_command_message(
+            socket.lock().await.get_mut(),
+            1,
+            &protocol::Command::SetClientName(props),
+            protocol_version,
+        )?;
+        *seq += 1;
+
+        // The reply contains our client ID.
+        let _ = protocol::read_reply_message::<protocol::SetClientNameReply>(
+            socket.lock().await,
+            protocol_version,
+        )?;
+        Ok(())
+    }
+
+    // async fn get_sink_info
+
+    // pub async fn get_volume(&self) -> Option<usize> {
+    //     let info = self.client.sink_info(self.default_sink).await.ok()?;
+    //     Some(average_cvolume(&info.cvolume))
+    // }
+}
+
+fn raise_cvolume(old: &ChannelVolume, amount: usize) -> ChannelVolume {
+    let mut new = ChannelVolume::empty();
+
+    for channel in old.channels() {
+        let new_channel = channel.as_u32() + level_to_raw(amount);
+        new.push(Volume::from_u32_clamped(new_channel));
+    }
+
+    new
+}
+
+fn set_cvolume(num_channels: usize, value: usize) -> ChannelVolume {
+    let mut new = ChannelVolume::empty();
+
+    for _ in 0..num_channels {
+        let new_channel = level_to_raw(value);
+        new.push(Volume::from_u32_clamped(new_channel));
+    }
+
+    new
+}
+
+fn average_cvolume(cvolume: &ChannelVolume) -> usize {
+    let channels = cvolume.channels();
+    let mut sum = 0;
+    for channel in channels {
+        sum += channel.as_u32();
+    }
+
+    percent_to_level(raw_to_percent(sum) / channels.len() as f32)
+}
+
+fn percent_to_level(percent: f32) -> usize {
+    (percent * 100.0).round() as usize
+}
+
+fn raw_to_percent(raw: u32) -> f32 {
+    raw as f32 / VOLUME_NORM as f32
+}
+
+fn raw_to_level(raw: u32) -> usize {
+    ((100 * raw) as f32 / VOLUME_NORM as f32) as usize
+}
+
+fn level_to_raw(level: usize) -> u32 {
+    ((level as f32 / 100.0) * VOLUME_NORM as f32) as u32
+}

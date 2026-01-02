@@ -1,11 +1,14 @@
+use std::slice::Iter;
+
+use axum::extract::State;
 use maud::{Markup, html};
 
 use crate::{
-    keyboard::Key,
-    templates::{
+    AppState, apps::{App, Config}, keyboard::Key, templates::{
         base_page,
-        control_buttons::{build_control_grid, key_button}, use_svg,
-    },
+        control_buttons::{build_control_grid, control_button, key_button, keyboard_dialog},
+        use_svg,
+    }
 };
 
 const TITLE: &str = "WebRemote";
@@ -39,12 +42,20 @@ fn media_control_bar() -> Markup {
     }
 }
 
-fn build_app_bar(apps: &[usize]) //-> Markup
-{
-
+fn build_app_bar(apps: Iter<App>) -> Markup {
+    html! {
+        #app-bar {
+            @for app in apps {
+                button .btn .app-btn data-app=(app.name) {
+                    (use_svg(&app.icon_path(), &["app-svg"]))
+                }
+            }
+        }
+    }
 }
 
-pub async fn index() -> Markup {
+pub async fn index(State(state): State<AppState>) -> Markup {
+    let apps = state.config.apps.iter();
     let head_content = html! {
         meta description=(DESCRIPTION);
         meta mobile-web-app-capable="yes";
@@ -52,15 +63,19 @@ pub async fn index() -> Markup {
         meta apple-mobile-web-app-title=(TITLE);
         meta apple-mobile-web-app-status-bar-style="default";
 
-        link rel="stylesheet" href="public/index.css";
-        link rel="stylesheet" href="public/slider.css";
-        //script src="static/index.js";
+        link rel="stylesheet" href="dist/index.css";
+        link rel="stylesheet" href="dist/slider.css";
+        script defer src="dist/index.js" {};
 
         link rel="manifest" href="manifest.json";
 
         // iOS Favicons
         link rel="apple-touch-icon" href="/public/icons/icon_x180.png" sizes="180x180";
         link rel="apple-touch-icon" href="/public/icons/icon_x192.png" sizes="192x192";
+    };
+
+    let keyboard_button = html! {
+        (control_button("keyboard-button", use_svg("/public/icons/keyboard.svg#symbol", &[])))
     };
 
     let content = html! {
@@ -83,9 +98,12 @@ pub async fn index() -> Markup {
                (1, 1, key_button(Key::Enter)),
                (1, 2, key_button(Key::Right)),
                (2, 1, key_button(Key::Down)),
-               // (2, 2, keyboard_button),
+               (2, 2, keyboard_button),
              ]));
+            (build_app_bar(apps));
         }
+
+        (keyboard_dialog())
     };
 
     base_page(TITLE, head_content, content)
