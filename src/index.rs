@@ -4,7 +4,7 @@ use axum::extract::State;
 use maud::{Markup, html};
 
 use crate::{
-    AppState, apps::{App, Config}, keyboard::Key, templates::{
+    AppState, apps::App, keyboard::Key, templates::{
         base_page,
         control_buttons::{build_control_grid, control_button, key_button, keyboard_dialog},
         use_svg,

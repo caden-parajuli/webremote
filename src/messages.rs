@@ -1,7 +1,11 @@
 use std::str::FromStr;
 
+use axum::extract::ws::{Message, WebSocket};
+use futures_util::{SinkExt, stream::SplitSink};
+use mpris::{FindingError, PlayerFinder};
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use tokio::sync::{Mutex, broadcast::Sender};
+use tracing::error;
 
 use crate::{
     AppState,
@@ -37,8 +41,6 @@ impl ClientMessage {
     }
 
     pub async fn handle(&self, state: &mut AppState) -> (bool, Option<ServerMessage>) {
-        info!("Handling: {:#?}", self);
-
         match self {
             ClientMessage::PushKey { key } => {
                 let key = match Key::from_str(key) {
@@ -79,32 +81,40 @@ impl ClientMessage {
             },
             ClientMessage::SetVolume { value } => {
                 match state.pulse_state.set_volume(*value).await {
-                    Ok(_) => match state.pulse_state.get_volume().await {
-                        Ok(volume) => {
-                            return (true, Some(ServerMessage::Volume { level: volume }));
-                        }
-                        Err(err) => error!("Get volume: {:#?}", err),
-                    },
+                    Ok(_) => (),
                     Err(err) => error!("Set volume: {:#?}", err),
                 }
             }
             ClientMessage::AdjustVolume { delta } => {
                 match state.pulse_state.adjust_volume(*delta).await {
-                    Ok(_) => match state.pulse_state.get_volume().await {
-                        Ok(volume) => {
-                            return (true, Some(ServerMessage::Volume { level: volume }));
-                        }
-                        Err(err) => error!("Get volume: {:#?}", err),
-                    },
+                    Ok(_) => (),
                     Err(err) => error!("Adjust volume: {:#?}", err),
                 }
             }
-            ClientMessage::Pause => todo!(),
-            ClientMessage::Play => todo!(),
-            ClientMessage::PlayPause => todo!(),
-            ClientMessage::Stop => todo!(),
+            ClientMessage::Pause
+            | ClientMessage::Play
+            | ClientMessage::PlayPause
+            | ClientMessage::Stop => {
+                if let Err(err) = self.handle_mpris_message() {
+                    error!("MPRIS: {}", err)
+                }
+            }
         }
         (false, None)
+    }
+
+    fn handle_mpris_message(&self) -> Result<(), FindingError> {
+        let player_finder = PlayerFinder::new()?;
+        let player = player_finder.find_active()?;
+
+        let () = match self {
+            ClientMessage::Pause => player.pause()?,
+            ClientMessage::Play => player.play()?,
+            ClientMessage::PlayPause => player.play_pause()?,
+            ClientMessage::Stop => player.stop()?,
+            _ => (),
+        };
+        Ok(())
     }
 }
 
@@ -112,4 +122,34 @@ impl ClientMessage {
 #[serde(tag = "type")]
 pub enum ServerMessage {
     Volume { level: usize },
+}
+
+impl ServerMessage {
+    pub async fn broadcast(&self, broadcaster: &Mutex<Sender<Message>>) {
+        let msg: Message = match serde_json::to_string(self) {
+            Ok(it) => it.into(),
+            Err(err) => {
+                error!("Serializing broadcast: {}", err);
+                return;
+            }
+        };
+
+        if let Err(err) = broadcaster.lock().await.send(msg) {
+            error!("Sending broadcast: {}", err);
+        }
+    }
+
+    pub async fn send(&self, client_tx: &Mutex<SplitSink<WebSocket, Message>>) {
+        let msg: Message = match serde_json::to_string(self) {
+            Ok(it) => it.into(),
+            Err(err) => {
+                error!("Serializing broadcast: {}", err);
+                return;
+            }
+        };
+
+        if let Err(err) = client_tx.lock().await.send(msg).await {
+            error!("Sending broadcast: {}", err);
+        }
+    }
 }

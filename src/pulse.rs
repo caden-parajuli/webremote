@@ -1,16 +1,19 @@
-use std::{iter::repeat_n, os::unix::net::UnixStream};
+use std::{iter::repeat_n, os::unix::net::UnixStream, sync::Arc};
 
+use axum::extract::ws::Message;
 use pulseaudio::{
     Client, ClientError,
-    protocol::{ChannelVolume, DEFAULT_SINK, Volume},
+    protocol::{ChannelVolume, DEFAULT_SINK, SubscriptionMask, Volume},
 };
+use tokio::sync::{Mutex, broadcast::Sender};
+
+use crate::messages::ServerMessage;
 
 const VOLUME_NORM: u32 = 0x10000;
 
 #[derive(Debug, Clone)]
 pub struct PulseState {
     client: Client,
-    default_sink: u32,
 }
 
 pub enum PulseError {
@@ -48,40 +51,66 @@ impl PulseState {
 
         let client = Client::new_unix(c"WebRemote", sock, Some(cookie))?;
 
-        let default_sink_name = DEFAULT_SINK.to_owned();
-
-        let sink_info = client.sink_info_by_name(default_sink_name).await?;
-        let default_sink = sink_info.index;
-
-        Ok(PulseState {
-            client,
-            default_sink,
-        })
+        Ok(PulseState { client })
     }
 
     pub async fn get_volume(&self) -> Result<usize, PulseError> {
-        let info = self.client.sink_info(self.default_sink).await?;
+        let info = self
+            .client
+            .sink_info_by_name(DEFAULT_SINK.to_owned())
+            .await?;
         Ok(average_cvolume(&info.cvolume))
     }
 
     pub async fn set_volume(&self, level: usize) -> Result<(), PulseError> {
-        let info = self.client.sink_info(self.default_sink).await?;
+        let info = self
+            .client
+            .sink_info_by_name(DEFAULT_SINK.to_owned())
+            .await?;
         let num_channels = info.cvolume.channels().len();
 
         self.client
-            .set_sink_volume(self.default_sink, set_cvolume(num_channels, level))
+            .set_sink_volume_by_name(DEFAULT_SINK.to_owned(), set_cvolume(num_channels, level))
             .await?;
         Ok(())
     }
 
     pub async fn adjust_volume(&self, delta: isize) -> Result<(), PulseError> {
-        let info = self.client.sink_info(self.default_sink).await?;
+        let info = self
+            .client
+            .sink_info_by_name(DEFAULT_SINK.to_owned())
+            .await?;
         let old = info.cvolume;
 
         self.client
-            .set_sink_volume(self.default_sink, adjust_cvolume(&old, delta))
+            .set_sink_volume_by_name(DEFAULT_SINK.to_owned(), adjust_cvolume(&old, delta))
             .await?;
         Ok(())
+    }
+
+    pub async fn subscribe_volume(
+        &'static self,
+        runtime: tokio::runtime::Runtime,
+        broadcaster: Arc<Mutex<Sender<Message>>>,
+    ) -> Result<(), PulseError> {
+        let broadcaster = Arc::clone(&broadcaster);
+
+        Ok(self
+            .client
+            .subscribe(
+                SubscriptionMask::SINK,
+                Box::new(move |_| {
+                    let broadcaster = Arc::clone(&broadcaster);
+                    runtime.spawn(async move {
+                        if let Ok(volume) = self.get_volume().await {
+                            ServerMessage::Volume { level: volume }
+                                .broadcast(&broadcaster)
+                                .await;
+                        }
+                    });
+                }),
+            )
+            .await?)
     }
 }
 
@@ -120,10 +149,6 @@ fn percent_to_level(percent: f32) -> usize {
 
 fn raw_to_percent(raw: u32) -> f32 {
     raw as f32 / VOLUME_NORM as f32
-}
-
-fn raw_to_level(raw: u32) -> usize {
-    ((100 * raw) as f32 / VOLUME_NORM as f32) as usize
 }
 
 fn level_to_raw(level: usize) -> u32 {

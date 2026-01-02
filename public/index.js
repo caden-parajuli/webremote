@@ -109,9 +109,7 @@ function openApp(socket, app) {
  * @returns {void}
  */
 function callMpris(socket, method) {
-    socket.send(JSON.stringify({
-        [method]: {}
-    }));
+    socket.send(`"${method}"`);
 }
 
 /**

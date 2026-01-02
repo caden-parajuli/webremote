@@ -102,19 +102,10 @@ async fn recv_from_client(
         .handle(state).await;
 
         if let Some(response) = response_opt {
-            let response_msg: Message = match serde_json::to_string(&response) {
-                Ok(it) => it.into(),
-                Err(err) => {
-                    error!("Serializing response: {}", err);
-                    continue;
-                }
-            };
             if is_broadcast {
-                if let Err(err) = state.broadcast.lock().await.send(response_msg) {
-                    info!("{}", err);
-                }
-            } else if let Err(err) = client_tx.lock().await.send(response_msg).await {
-                info!("{}", err);
+                response.broadcast(state.broadcast.as_ref()).await;
+            } else {
+                response.send(client_tx.as_ref()).await;
             }
         }
     }

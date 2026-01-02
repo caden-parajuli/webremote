@@ -1,16 +1,19 @@
 pub mod apps;
+mod command_line;
 mod index;
 pub mod keyboard;
-pub mod templates;
-pub mod wm;
-mod webserver;
-mod command_line;
-mod pulse;
 pub mod messages;
+mod pulse;
+pub mod templates;
+mod webserver;
+pub mod wm;
 
-use std::{path::Path, sync::Arc};
 use axum::extract::ws::Message;
-use tokio::sync::{Mutex, broadcast::{self, Sender}};
+use std::{path::Path, sync::Arc};
+use tokio::sync::{
+    Mutex,
+    broadcast::{self, Sender},
+};
 
 use crate::{apps::Config, pulse::PulseState};
 
@@ -19,8 +22,8 @@ const DIST: &str = "./dist";
 #[derive(Debug, Clone)]
 pub struct AppState {
     config: &'static Config,
-    pulse_state: PulseState,
-    broadcast: Arc<Mutex<Sender<Message>>>
+    pulse_state: &'static PulseState,
+    broadcast: Arc<Mutex<Sender<Message>>>,
 }
 
 #[tokio::main]
@@ -37,12 +40,41 @@ async fn main() {
     };
 
     let config: &'static Config = Box::leak(Box::new(Config::load(args.config)));
-    let pulse_state = PulseState::new().await.unwrap();
+    let pulse_state = Box::leak(Box::new(PulseState::new().await.unwrap()));
 
     let (tx, _) = broadcast::channel(32);
     let broadcast = Arc::new(Mutex::new(tx));
 
-    let state = AppState { config, pulse_state, broadcast };
+    let rt = tokio::runtime::Runtime::new().unwrap();
+
+    pulse_state.subscribe_volume(rt, Arc::clone(&broadcast))
+        .await
+        .expect("Couldn't subscribe to volume");
+
+    let state = AppState {
+        config,
+        pulse_state,
+        broadcast,
+    };
 
     webserver::serve(state, dist_dir, &interface).await;
 }
+
+// async fn subscribe(pulse_state: &PulseState, broadcaster: Arc<Mutex<Sender<Message>>>) {
+//     tokio::spawn(async move {
+//         loop {
+//             tokio::time::sleep(Duration::from_secs(1)).await;
+//             println!("send");
+//
+//             let new_level = (std::time::SystemTime::now()
+//                 .duration_since(std::time::UNIX_EPOCH)
+//                 .unwrap_or(Duration::from_nanos(30))
+//                 .subsec_nanos()
+//                 % 100) as usize;
+//
+//             ServerMessage::Volume { level: new_level }
+//                 .broadcast(broadcaster.as_ref())
+//                 .await;
+//         }
+//     });
+// }

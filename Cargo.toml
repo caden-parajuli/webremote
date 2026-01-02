@@ -11,6 +11,7 @@ confy = "2.0.0"
 futures-util = "0.3.31"
 maud = { version = "0.27.0", features = ["axum"] }
 mime = "0.3.17"
+mpris = "2.0.1"
 pulseaudio = { git = "https://github.com/caden-parajuli/pulseaudio-rs" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.148"

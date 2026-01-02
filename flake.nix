@@ -26,6 +26,7 @@
         devShell = mkShell rec {
           nativeBuildInputs = [
             pkg-config
+            dbus
 
             nodejs
             emmet-language-server
