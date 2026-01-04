@@ -62,18 +62,20 @@ in
       '';
     };
     default = {
-      window_manager = "sway";
+      window_manager = "Sway";
       apps = [
         {
           name = "kodi";
           pretty_name = "Kodi";
           launch_command = "kodi";
+          app_id = "kodi";
           default_workspace = 1;
         }
         {
           name = "youtube";
           pretty_name = "YouTube";
           launch_command = "VacuumTube";
+          app_id = "vacuumtube";
           default_workspace = 2;
         }
       ];

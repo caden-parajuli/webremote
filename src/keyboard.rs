@@ -1,5 +1,7 @@
 use std::{fmt::Display, process::Command, str::FromStr};
 
+use tracing::info;
+
 const ENTER: usize = 28;
 const UP: usize = 103;
 const LEFT: usize = 105;
@@ -73,21 +75,22 @@ impl Key {
     }
 
     pub fn push(self) {
-        let down_arg = self.to_string() + ":1";
+        let down_arg = usize::from(self).to_string() + ":1";
 
         let _ = Command::new("ydotool").args(["key", &down_arg]).spawn();
     }
 
     pub fn release(self) {
-        let up_arg = self.to_string() + ":0";
+        let up_arg = usize::from(self).to_string() + ":0";
 
         let _ = Command::new("ydotool").args(["key", &up_arg]).spawn();
     }
 
     pub fn press(self) {
-        let down_arg = self.to_string().to_owned().clone() + ":1";
-        let up_arg = self.to_string().to_owned() + ":0";
+        let down_arg = usize::from(self).to_string() + ":1";
+        let up_arg = usize::from(self).to_string() + ":0";
 
+        info!("Pressing ydotool: {}", self);
         let _ = Command::new("ydotool")
             .args(["key", &down_arg, &up_arg])
             .spawn();
