@@ -35,9 +35,6 @@
             inherit system;
             overlays = [
               inputs.rust-overlay.overlays.default
-              (final: prev: {
-                # ... things you need to patch ...
-              })
             ];
             config = { };
           };

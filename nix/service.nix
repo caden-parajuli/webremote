@@ -54,81 +54,30 @@ in
       description = "Sets the YDOTOOL_SOCKET environment variable. This is also used by the ydotool NixOS service.";
     };
 
-    settings =
-      let
-        appOptions = with lib.types; {
-          options = {
-            name = mkOption {
-              type = str;
-            };
-            pretty_name = mkOption {
-              type = nullOr str;
-              default = null;
-            };
-            launch_command = mkOption {
-              type = str;
-            };
-            icon_path = mkOption {
-              type = nullOr str;
-              default = null;
-            };
-            default_workspace = mkOption {
-              type = nullOr int;
-              default = null;
-            };
-          };
-        };
-        configOpts = with lib.types; {
-          options = {
-            window_manager = mkOption {
-              # todo: enum
-              type = enum [
-                "sway"
-                "hyprland"
-              ];
-              default = "sway";
-            };
-            apps = mkOption {
-              type = with lib.types; listOf (submodule appOptions);
-              default = [];
-              example = [
-                {
-                  name = "kodi";
-                  pretty_name = "Kodi";
-                  launch_command = "kodi";
-                  default_workspace = 1;
-                }
-                {
-                  name = "youtube";
-                  pretty_name = "YouTube";
-                  launch_command = "VacuumTube";
-                  default_workspace = 2;
-                }
-              ];
-            };
-          };
-        };
-      in
-      lib.mkOption {
-        type = with lib.types; submodule configOpts;
-        default = {
-          window_manager = "sway";
-          apps = [
-            {
-              name = "kodi";
-              pretty_name = "Kodi";
-              launch_command = "kodi";
-              default_workspace = 1;
-            }
-            {
-              name = "youtube";
-              pretty_name = "YouTube";
-              launch_command = "VacuumTube";
-              default_workspace = 2;
-            }
-          ];
-        };
-      };
+    settings = lib.mkOption {
+      inherit (appConfigFormat) type;
+      default = { };
+      description = ''
+        Configuration included in `config.toml`.
+      '';
+    };
+    default = {
+      window_manager = "sway";
+      apps = [
+        {
+          name = "kodi";
+          pretty_name = "Kodi";
+          launch_command = "kodi";
+          default_workspace = 1;
+        }
+        {
+          name = "youtube";
+          pretty_name = "YouTube";
+          launch_command = "VacuumTube";
+          default_workspace = 2;
+        }
+      ];
+    };
   };
 
   config = mkIf cfg.enable {
@@ -154,7 +103,7 @@ in
         ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port} --config ${appConfigFile}";
         WorkingDirectory = cfg.package;
         Restart = "on-failure";
-        StartLimitIntervalSec=15;
+        StartLimitIntervalSec = 15;
         StateDirectory = "webremote";
       };
     };
