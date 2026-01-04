@@ -46,8 +46,8 @@ impl App {
 }
 
 impl App {
-    pub fn switch_to(&self, wm: &WindowManager) {
-        wm.goto_app(self);
+    pub async fn switch_to(&self, wm: &WindowManager) {
+        wm.goto_app(self).await;
     }
 
     pub fn spawn(&self) -> Result<(), Error> {

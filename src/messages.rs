@@ -70,7 +70,7 @@ impl ClientMessage {
             ClientMessage::GotoApp { name } => {
                 let config = state.config;
                 if let Some(app) = config.find_app_by_name(name) {
-                    app.switch_to(&config.window_manager);
+                    app.switch_to(&config.window_manager).await;
                 }
             }
             ClientMessage::GetVolume => match state.pulse_state.get_volume().await {

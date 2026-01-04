@@ -9,6 +9,7 @@ clap = { version = "4.5.53", features = ["derive"] }
 clap_derive = "4.5.49"
 confy = "2.0.0"
 futures-util = "0.3.31"
+hyprland = { git = "https://github.com/hyprland-community/hyprland-rs", branch = "master" }
 maud = { version = "0.27.0", features = ["axum"] }
 mime = "0.3.17"
 mpris = "2.0.1"
