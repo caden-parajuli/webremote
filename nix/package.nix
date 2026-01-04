@@ -1,22 +1,23 @@
 {
   pkgs,
   lib,
+  rustPlatform,
   stdenv,
   ...
 }:
-pkgs.ocamlPackages.buildDunePackage {
+rustPlatform.buildRustPackage(finalAttrs: {
   pname = "webremote";
-  version = "0.1.0";
+  version = "0.2.0";
   
   src = ./..;
 
-  minimalOCamlVersion = "5.3.0";
+  cargoHash = "sha256-6WEQyGZxbvPGV/NCHed3iRqcFR2fAPal1RmbM3pxWvM=";
 
   postInstall = ''
      mkdir -p ./public
-     mkdir -p ./static
+     mkdir -p ./dist
      cp -r ./public $out/public
-     cp -r ./static $out/static
+     cp -r ./dist $out/dist
      '';
 
   nativeBuildInputs = with pkgs; [
@@ -24,7 +25,6 @@ pkgs.ocamlPackages.buildDunePackage {
     pkg-config
   ];
   buildInputs = with pkgs; [
-    libpulseaudio
     dbus
 
     ydotool
@@ -32,4 +32,11 @@ pkgs.ocamlPackages.buildDunePackage {
   propogatedBuildInputs = with pkgs; [
     ydotool
   ];
-}
+
+  meta = {
+    description = "A web-based remote control for your HTPC with PWA support.";
+    homepage = "https://github.com/caden-parajuli/webremote";
+    license = lib.licenses.mit;
+    maintainers = [ ];
+  };
+})

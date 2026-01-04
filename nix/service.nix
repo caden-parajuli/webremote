@@ -8,8 +8,8 @@ with lib;
 let
   cfg = config.services.webremote;
 
-  appConfigFormat = pkgs.formats.json { };
-  appConfigFile = appConfigFormat.generate "config.json5" cfg.settings;
+  appConfigFormat = pkgs.formats.toml { };
+  appConfigFile = appConfigFormat.generate "config.toml" cfg.settings;
   pulseService = if cfg.usePipewire then "pipewire-pulse.service" else "pulseaudio.service";
   wmPaths =
     if cfg.settings.window_manager == "hyprland" then [ config.programs.hyprland.package ] else [ ];
@@ -137,12 +137,15 @@ in
       after = [
         pulseService
         "network-online.target"
+        "graphical-session.target"
       ];
       wants = [
         "ydotoold.service"
         pulseService
         "network-online.target"
+        "graphical-session.target"
       ];
+      # partOf = [ "graphical-session.target" ];
       path = [ cfg.ydotoolPackage ] ++ wmPaths;
       environment = {
         YDOTOOL_SOCKET = cfg.ydotoolSocket;
@@ -151,6 +154,7 @@ in
         ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port} --config ${appConfigFile}";
         WorkingDirectory = cfg.package;
         Restart = "on-failure";
+        StartLimitIntervalSec=15;
         StateDirectory = "webremote";
       };
     };

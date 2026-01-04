@@ -1,4 +1,4 @@
-use std::{iter::repeat_n, os::unix::net::UnixStream, sync::Arc};
+use std::{iter::repeat_n, sync::Arc, time::Duration};
 
 use axum::extract::ws::Message;
 use pulseaudio::{
@@ -6,8 +6,9 @@ use pulseaudio::{
     protocol::{ChannelVolume, DEFAULT_SINK, SubscriptionMask, Volume},
 };
 use tokio::sync::{Mutex, broadcast::Sender};
+use tracing::info;
 
-use crate::messages::ServerMessage;
+use crate::{async_utils::retry_exponential, messages::ServerMessage};
 
 const VOLUME_NORM: u32 = 0x10000;
 
@@ -16,45 +17,41 @@ pub struct PulseState {
     client: Client,
 }
 
-pub enum PulseError {
-    NoSocket,
-    SocketConnect,
-    NoCookie,
-    ClientError(ClientError),
-}
-
-impl std::fmt::Debug for PulseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::NoSocket => write!(f, "NoSocket"),
-            Self::SocketConnect => write!(f, "SocketConnect"),
-            Self::NoCookie => write!(f, "NoCookie"),
-            Self::ClientError(client_error) => client_error.fmt(f),
-        }
-    }
-}
-
-impl From<ClientError> for PulseError {
-    fn from(value: ClientError) -> Self {
-        PulseError::ClientError(value)
+impl Default for PulseState {
+    fn default() -> Self {
+        Self::new().unwrap()
     }
 }
 
 impl PulseState {
-    pub async fn new() -> Result<Self, PulseError> {
-        let socket_path = pulseaudio::socket_path_from_env().ok_or(PulseError::NoSocket)?;
-        let sock = UnixStream::connect(socket_path).or(Err(PulseError::SocketConnect))?;
+    pub fn new() -> Result<Self, ClientError> {
+        let client = Client::from_env(c"WebRemote")?;
+        Ok(PulseState { client })
+    }
+    pub async fn new_retry(
+        runtime: &tokio::runtime::Runtime,
+        retries: usize,
+    ) -> Result<Self, ClientError> {
+        let initial_wait = Duration::from_millis(500);
 
-        let cookie = pulseaudio::cookie_path_from_env()
-            .and_then(|path| std::fs::read(path).ok())
-            .ok_or(PulseError::NoCookie)?;
-
-        let client = Client::new_unix(c"WebRemote", sock, Some(cookie))?;
+        let client = retry_exponential(
+            async |_| {
+                info!("Attempting to connect to PulseAudio");
+                runtime
+                    .spawn_blocking(|| Client::from_env(c"WebRemote"))
+                    .await
+                    .unwrap()
+            },
+            (),
+            retries,
+            initial_wait,
+        )
+        .await?;
 
         Ok(PulseState { client })
     }
 
-    pub async fn get_volume(&self) -> Result<usize, PulseError> {
+    pub async fn get_volume(&self) -> Result<usize, ClientError> {
         let info = self
             .client
             .sink_info_by_name(DEFAULT_SINK.to_owned())
@@ -62,7 +59,7 @@ impl PulseState {
         Ok(average_cvolume(&info.cvolume))
     }
 
-    pub async fn set_volume(&self, level: usize) -> Result<(), PulseError> {
+    pub async fn set_volume(&self, level: usize) -> Result<(), ClientError> {
         let info = self
             .client
             .sink_info_by_name(DEFAULT_SINK.to_owned())
@@ -75,7 +72,7 @@ impl PulseState {
         Ok(())
     }
 
-    pub async fn adjust_volume(&self, delta: isize) -> Result<(), PulseError> {
+    pub async fn adjust_volume(&self, delta: isize) -> Result<(), ClientError> {
         let info = self
             .client
             .sink_info_by_name(DEFAULT_SINK.to_owned())
@@ -92,11 +89,10 @@ impl PulseState {
         &'static self,
         runtime: tokio::runtime::Runtime,
         broadcaster: Arc<Mutex<Sender<Message>>>,
-    ) -> Result<(), PulseError> {
+    ) -> Result<(), ClientError> {
         let broadcaster = Arc::clone(&broadcaster);
 
-        Ok(self
-            .client
+        self.client
             .subscribe(
                 SubscriptionMask::SINK,
                 Box::new(move |_| {
@@ -110,7 +106,7 @@ impl PulseState {
                     });
                 }),
             )
-            .await?)
+            .await
     }
 }
 

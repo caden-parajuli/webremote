@@ -1,4 +1,5 @@
 pub mod apps;
+pub mod async_utils;
 mod command_line;
 mod index;
 pub mod keyboard;
@@ -18,6 +19,7 @@ use tokio::sync::{
 use crate::{apps::Config, pulse::PulseState};
 
 const DIST: &str = "./dist";
+const RETRIES: usize = 5;
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -39,15 +41,16 @@ async fn main() {
         "./public"
     };
 
+    let rt = tokio::runtime::Runtime::new().unwrap();
+
     let config: &'static Config = Box::leak(Box::new(Config::load(args.config)));
-    let pulse_state = Box::leak(Box::new(PulseState::new().await.unwrap()));
+    let pulse_state = Box::leak(Box::new(PulseState::new().unwrap()));
 
     let (tx, _) = broadcast::channel(32);
     let broadcast = Arc::new(Mutex::new(tx));
 
-    let rt = tokio::runtime::Runtime::new().unwrap();
-
-    pulse_state.subscribe_volume(rt, Arc::clone(&broadcast))
+    pulse_state
+        .subscribe_volume(rt, Arc::clone(&broadcast))
         .await
         .expect("Couldn't subscribe to volume");
 

@@ -9,6 +9,9 @@ pkgs.testers.runNixOSTest {
 
   nodes.machine =
     { config, pkgs, ... }:
+    let
+      webremotePackage = pkgs.callPackage ./package.nix { };
+    in
     {
       imports = [ ./service.nix ];
 
@@ -22,11 +25,18 @@ pkgs.testers.runNixOSTest {
       services.displayManager.autoLogin.enable = true;
       services.displayManager.autoLogin.user = "alice";
 
-      environment.systemPackages = [ pkgs.curl ];
+      environment.systemPackages = [
+        pkgs.curl
+        webremotePackage
+        pkgs.pulseaudio
+      ];
 
       users.users.alice = {
         isNormalUser = true;
-        extraGroups = [ "wheel" "ydotool" ];
+        extraGroups = [
+          "wheel"
+          "ydotool"
+        ];
         packages = with pkgs; [
           (callPackage ./package.nix { })
         ];
@@ -35,6 +45,8 @@ pkgs.testers.runNixOSTest {
       services = {
         webremote = {
           enable = true;
+          usePipewire = true;
+
           port = 8000;
 
           settings.window_manager = "sway";
@@ -42,6 +54,9 @@ pkgs.testers.runNixOSTest {
 
         pipewire = {
           enable = true;
+          audio.enable = true;
+          socketActivation = true;
+
           alsa.enable = true;
           alsa.support32Bit = true;
           pulse.enable = true;
@@ -52,7 +67,7 @@ pkgs.testers.runNixOSTest {
     };
 
   testScript = ''
-    machine.wait_for_open_port(8000, timeout = 120)
+    machine.wait_for_open_port(8000, timeout = 45)
     output = machine.succeed("curl localhost:8000")
     assert "key-button" in output, "curl output does not contain 'key-button'"
   '';
