@@ -29,7 +29,7 @@ pub fn base_page(title: &str, head_content: Markup, content: Markup) -> Markup {
                 title { (title) };
 
                 meta charset="utf-8";
-                meta viewport=(viewport);
+                meta name="viewport" content=(viewport);
 
                 link rel="icon" href="/favicon.ico" mime-type="image/x-icon";
                 link rel="icon" href="/public/icons/icon_x16.png" size="16x16" mime-type="image/png";
