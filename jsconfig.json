@@ -2,11 +2,13 @@
     "compilerOptions": {
         "target": "es2015",
         "module": "es2020",
+        "lib": ["es2020", "dom", "webworker"],
         "baseUrl": ".",
         "checkJs": true,
         "resolveJsonModule": true
     },
     "include": [
-        "public/**/*.js"
+        "public/**/*.js",
+        "public/**/*.ts"
     ]
 }

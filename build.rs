@@ -13,21 +13,27 @@ use oxc::{
     codegen::{Codegen, CodegenOptions},
     minifier::{Minifier, MinifierOptions},
     parser::Parser,
+    semantic::SemanticBuilder,
     span::SourceType,
+    transformer::{TransformOptions, Transformer},
 };
 use parcel_sourcemap::SourceMap;
 
 fn main() {
-    // Rerun if these change
-    println!("cargo::rerun-if-changed=build.rs");
-    println!("cargo::rerun-if-changed=public/index.js");
-    println!("cargo::rerun-if-changed=public/index.css");
-
     let out_dir = "./dist";
     fs::create_dir_all(out_dir).unwrap();
 
-    let js_public = ["index.js", "service-worker.js"];
+    let js_public = ["index.ts", "service-worker.js"];
     let css_public_roots = ["index.css", "slider.css"];
+
+    // Rerun if these change
+    println!("cargo::rerun-if-changed=build.rs");
+    for file in js_public {
+        println!("cargo::rerun-if-changed=public/{file}");
+    }
+    for file in css_public_roots {
+        println!("cargo::rerun-if-changed=public/{file}");
+    }
 
     let js_res = bundle_js(out_dir, &js_public);
     let css_res = bundle_css(out_dir, &css_public_roots);
@@ -40,10 +46,18 @@ fn bundle_js(out_dir: &str, js_public: &[&str]) -> Result<(), Box<dyn std::error
     let allocator = Allocator::default();
     let options = MinifierOptions::default();
     let codegen_options = CodegenOptions::minify();
+    let transformer_options =
+        TransformOptions::from_target_list(&["firefox146", "safari18", "chrome144"])?;
 
     for src in js_public {
         let src_path = Path::new("public").join(src);
-        let dest_path = Path::new(&out_dir).join(src);
+
+        let dest_name = if src.ends_with(".ts") {
+            &(src[0..src.len() - 3].to_owned() + ".js")
+        } else {
+            *src
+        };
+        let dest_path = Path::new(&out_dir).join(dest_name);
 
         let source_text = fs::read_to_string(&src_path)?;
         let source_type = SourceType::from_path(&src_path).unwrap();
@@ -51,12 +65,27 @@ fn bundle_js(out_dir: &str, js_public: &[&str]) -> Result<(), Box<dyn std::error
             .parse()
             .program;
 
+        let semantic_builder = SemanticBuilder::new().with_check_syntax_error(true);
+        let ret = semantic_builder.build(&program);
+        for err in ret.errors.iter() {
+            println!("cargo::error={err}");
+        }
+        let scoping = ret.semantic.into_scoping();
+
+        let transformer = Transformer::new(&allocator, &src_path, &transformer_options);
+        for err in transformer
+            .build_with_scoping(scoping, &mut program)
+            .errors
+            .iter()
+        {
+            println!("cargo::error={err}");
+        }
+
         let minifier = Minifier::new(options.clone());
         minifier.minify(&allocator, &mut program);
 
-        let codegen = Codegen::new()
-            .with_options(codegen_options.clone());
-        
+        let codegen = Codegen::new().with_options(codegen_options.clone());
+
         let code = codegen.build(&program).code;
         fs::write(dest_path, code)?;
     }

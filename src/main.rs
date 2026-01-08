@@ -19,7 +19,6 @@ use tokio::sync::{
 use crate::{apps::Config, pulse::PulseState};
 
 const DIST: &str = "./dist";
-const RETRIES: usize = 5;
 
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -62,22 +61,3 @@ async fn main() {
 
     webserver::serve(state, dist_dir, &interface).await;
 }
-
-// async fn subscribe(pulse_state: &PulseState, broadcaster: Arc<Mutex<Sender<Message>>>) {
-//     tokio::spawn(async move {
-//         loop {
-//             tokio::time::sleep(Duration::from_secs(1)).await;
-//             println!("send");
-//
-//             let new_level = (std::time::SystemTime::now()
-//                 .duration_since(std::time::UNIX_EPOCH)
-//                 .unwrap_or(Duration::from_nanos(30))
-//                 .subsec_nanos()
-//                 % 100) as usize;
-//
-//             ServerMessage::Volume { level: new_level }
-//                 .broadcast(broadcaster.as_ref())
-//                 .await;
-//         }
-//     });
-// }
