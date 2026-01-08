@@ -1,11 +1,11 @@
 //! This build script touches the filesystem outside of the OUT_DIR directory.
 //! This should be fine since this is a binary crate.
 
-use std::{fs, io::Error, path::Path};
+use std::{fs::{self, File}, io::Error, path::Path};
 
 use lightningcss::{
     bundler::{Bundler, FileProvider},
-    printer::PrinterOptions,
+    printer::{Printer, PrinterOptions},
     stylesheet,
 };
 use oxc::{
@@ -61,9 +61,16 @@ fn bundle_js(out_dir: &str, js_public: &[&str]) -> Result<(), Box<dyn std::error
 
         let source_text = fs::read_to_string(&src_path)?;
         let source_type = SourceType::from_path(&src_path).unwrap();
-        let mut program = Parser::new(&allocator, &source_text, source_type)
-            .parse()
-            .program;
+
+        let parser_result = Parser::new(&allocator, &source_text, source_type).parse();
+        for err in parser_result.errors {
+            if parser_result.panicked {
+                println!("cargo::error={err}");
+            } else {
+                println!("cargo::warning={err}");
+            }
+        }
+        let mut program = parser_result.program;
 
         let semantic_builder = SemanticBuilder::new().with_check_syntax_error(true);
         let ret = semantic_builder.build(&program);
@@ -84,10 +91,22 @@ fn bundle_js(out_dir: &str, js_public: &[&str]) -> Result<(), Box<dyn std::error
         let minifier = Minifier::new(options.clone());
         minifier.minify(&allocator, &mut program);
 
-        let codegen = Codegen::new().with_options(codegen_options.clone());
+        let mut codegen_options = codegen_options.clone();
+        codegen_options.source_map_path = Some(src_path);
 
-        let code = codegen.build(&program).code;
-        fs::write(dest_path, code)?;
+        let codegen = Codegen::new().with_options(codegen_options);
+        let codegen_result = codegen.build(&program);
+        let code = codegen_result.code;
+
+        fs::write(dest_path.clone(), code)?;
+
+        // Write source map
+        if let Some(sourcemap) = codegen_result.map {
+            let mut sourcemap_path = dest_path;
+            sourcemap_path.add_extension("map");
+
+            fs::write(sourcemap_path, sourcemap.to_json_string())?;
+        }
     }
     Ok(())
 }
@@ -111,13 +130,20 @@ fn bundle_css(out_dir: &str, css_public: &[&str]) -> Result<(), Box<dyn std::err
 
         let printer_options = PrinterOptions {
             minify: true,
-            source_map: None,
+            source_map: Some(&mut source_map),
             project_root: Some("./"),
             targets: lightningcss::targets::Targets::default(),
             analyze_dependencies: None,
             pseudo_classes: None,
         };
-        fs::write(dest_path, stylesheet.to_css(printer_options)?.code)?;
+
+        fs::write(dest_path.clone(), stylesheet.to_css(printer_options)?.code)?;
+
+        let mut sourcemap_path = dest_path;
+        sourcemap_path.add_extension("map");
+        let source_map_text = source_map.to_json(Some("./"))?;
+
+        fs::write(sourcemap_path, source_map_text)?;
     }
 
     Ok(())

@@ -8,6 +8,7 @@ use futures_util::{
     stream::{SplitSink, SplitStream},
 };
 use mime::Mime;
+use tower::ServiceBuilder;
 use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -44,12 +45,16 @@ fn app(state: AppState, dist_dir: &str) -> Router {
         .route("/", get(index))
         .route("/ws", get(upgrade_handler))
         .with_state(state)
-        .layer(middleware::from_fn(log_index))
         .nest_service("/favicon.ico", favicon)
         .nest_service("/service-worker.js", service_worker)
         .nest_service("/manifest.json", manifest)
         .nest_service("/public", public)
         .nest_service("/dist", dist)
+        .layer(
+            ServiceBuilder::new()
+                .layer(middleware::from_fn(log_index))
+                .layer(middleware::from_fn(source_maps))
+        )
 }
 
 async fn upgrade_handler(
@@ -136,4 +141,17 @@ async fn log_index(req: Request, next: axum::middleware::Next) -> axum::response
 
     // Return the response
     next.run(req).await
+}
+
+async fn source_maps(req: Request, next: axum::middleware::Next) -> axum::response::Response {
+    let path = req.uri().path().to_string();
+
+    let mut response = next.run(req).await;
+
+    if path.ends_with("index.js") || path.ends_with(".css") {
+        let source_map = path.clone() + ".map";
+        response.headers_mut().insert("SourceMap", source_map.parse().unwrap());
+    }
+
+    response
 }
