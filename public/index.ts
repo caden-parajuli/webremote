@@ -66,7 +66,7 @@ class WS {
         }))
     }
 
-    pushKey(key: string) {
+    pressKey(key: string) {
         this.callKeyProc("PressKey", key);
     }
 
@@ -169,12 +169,14 @@ function addKeyboardDialogHandlers(ws: WS) {
 
 /** Add control/key listeners */
 function addControlHandlers(ws: WS) {
-    var keyButtons = document.querySelectorAll(".key-button")
+    var keyButtons = document.querySelectorAll(".key-button") as NodeListOf<HTMLButtonElement>;
     keyButtons.forEach(keyButton => {
-        addListenerIfNotNull(keyButton, "click", function (_: any) {
-            ws.pushKey(this.dataset.key);
+        addListenerIfNotNull(keyButton, "pointerdown", function (_: any) {
+            ws.keyDown(this.dataset.key);
         });
-        // @ts-ignore
+        addListenerIfNotNull(keyButton, "pointerup", function (_: any) {
+            ws.keyUp(this.dataset.key);
+        });
         console.log("Add handler: " + keyButton.dataset.key);
     });
 
@@ -260,10 +262,6 @@ function onContentLoad() {
     setMediaControlHandlers(ws);
     addControlHandlers(ws);
     addAppHandlers(ws);
-
-    // Prevent keyboard causing a viewport resize
-    // @ts-ignore
-    // navigator.virtualKeyboard.overlaysContent = true;
 
     // Prevent scroll on iOS
     window.addEventListener("scroll", (scroll_event) => {

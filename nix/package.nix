@@ -11,7 +11,7 @@ rustPlatform.buildRustPackage(finalAttrs: {
   
   src = ./..;
 
-  cargoHash = "sha256-dUxW/d4RF838sbYbLYvXeVJtFketsVIsKjp4eOduWD8=";
+  cargoHash = "sha256-SPPnOHPm4mMUcST4H9VQYEUWeStUWfWNXK21HdRiPzs=";
 
   postInstall = ''
      mkdir -p ./public
