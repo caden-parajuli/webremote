@@ -115,7 +115,8 @@ fn adjust_cvolume(old: &ChannelVolume, delta: isize) -> ChannelVolume {
         let new_v = if delta > 0 {
             v.as_u32() + level_to_raw(delta as usize)
         } else {
-            v.as_u32() - level_to_raw(-delta as usize)
+            let abs_delta = level_to_raw(-delta as usize);
+            v.as_u32().saturating_sub(abs_delta)
         };
 
         Volume::from_u32_clamped(new_v)
