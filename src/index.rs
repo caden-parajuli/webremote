@@ -54,6 +54,16 @@ fn build_app_bar(apps: Iter<App>) -> Markup {
     }
 }
 
+fn js_license_link() -> Markup {
+    html! {
+        div style="display:none" {
+            a href="/public/jslicense.html" data-jslicense="1" {
+                "JavaScript license information"
+            }
+        }
+    }
+}
+
 pub async fn index(State(state): State<AppState>) -> Markup {
     let apps = state.config.apps.iter();
     let head_content = html! {
@@ -103,6 +113,7 @@ pub async fn index(State(state): State<AppState>) -> Markup {
             (build_app_bar(apps));
         }
 
+        (js_license_link())
         (keyboard_dialog())
     };
 
