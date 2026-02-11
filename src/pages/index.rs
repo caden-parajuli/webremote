@@ -6,7 +6,7 @@ use maud::{Markup, html};
 use crate::{
     AppState, apps::App, keyboard::Key, templates::{
         base_page,
-        control_buttons::{build_control_grid, control_button, key_button, keyboard_dialog},
+        control_buttons::{build_control_grid, control_button, key_button},
         use_svg,
     }
 };
@@ -75,7 +75,9 @@ pub async fn index(State(state): State<AppState>) -> Markup {
 
         link rel="stylesheet" href="dist/index.css";
         link rel="stylesheet" href="dist/slider.css";
-        script defer src="dist/index.js" {};
+
+        script defer src="dist/index.js" type="module" {};
+        script defer src="dist/htmx.js" type="module" {};
 
         link rel="manifest" href="manifest.json";
 
@@ -114,7 +116,9 @@ pub async fn index(State(state): State<AppState>) -> Markup {
         }
 
         (js_license_link())
-        (keyboard_dialog())
+        // Template for resetting the placeholder
+        template #dialog-placeholder {
+        }
     };
 
     base_page(TITLE, head_content, content)

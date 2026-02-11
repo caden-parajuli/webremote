@@ -1,3 +1,4 @@
+import { htmx } from "./swapper.js";
 var volume = 50;
 
 class WS {
@@ -144,27 +145,36 @@ function addListenerIfNotNull(el: Element | null, ev: string, f: any): void {
 
 function addKeyboardDialogHandlers(ws: WS) {
     let keyboard_button = document.getElementById("keyboard-button")!;
-    let dialog = document.getElementById("keyboard-modal")! as HTMLDialogElement;
-    let textBox = document.getElementById("to-type")! as HTMLInputElement;
-    let confirmButton = document.getElementById("keyboard-ok")!;
 
-    keyboard_button.addEventListener("click", () => {
+    keyboard_button.addEventListener("click", async () => {
+        await htmx("/keyboard-dialog", "POST", "#dialog-placeholder")
+
+        let dialog = document.getElementById("keyboard-modal")! as HTMLDialogElement;
+        let textBox = document.getElementById("to-type")! as HTMLInputElement;
+        let confirmButton = document.getElementById("keyboard-ok")!;
+
         dialog.showModal();
         confirmButton.focus();
         textBox.focus();
+
+        dialog.addEventListener("close", (_) => {
+            let text = dialog.returnValue;
+            if (text !== "") {
+                ws.typeString(text);
+            }
+
+            // Remove the dialog from the DOM
+            const placeholder = document.createElement("template")
+            placeholder.id = "dialog-placeholder";
+            dialog.replaceWith(placeholder);
+        });
+
+        confirmButton.addEventListener("click", (e) => {
+            e.preventDefault();
+            dialog.close(textBox.value);
+        });
     })
 
-    dialog.addEventListener("close", (_) => {
-        let text = dialog.returnValue;
-        if (text !== "") {
-            ws.typeString(text);
-        }
-    });
-
-    confirmButton.addEventListener("click", (e) => {
-        e.preventDefault();
-        dialog.close(textBox.value);
-    });
 }
 
 /** Add control/key listeners */

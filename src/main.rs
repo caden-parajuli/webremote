@@ -1,7 +1,7 @@
 pub mod apps;
 pub mod async_utils;
 mod command_line;
-mod index;
+pub mod pages;
 pub mod keyboard;
 pub mod messages;
 mod pulse;

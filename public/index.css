@@ -84,6 +84,10 @@ footer {
 
 .key-text {
   font-size: 25cqmin;
+  /* Prevent selection */
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /* Volume */
@@ -91,6 +95,10 @@ footer {
 .volume-text {
   display: flex;
   justify-content: center;
+  /* Prevent selection */
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .volume-bar {

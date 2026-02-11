@@ -68,23 +68,3 @@ where
         }
     }
 }
-
-pub fn keyboard_dialog() -> Markup {
-    modal(
-        "keyboard-modal",
-        html! {
-            form #keyboard-form method="dialog" {
-                label #to-type-label for="to-type" {
-                    "Type:";
-                }
-                br {};
-                input #to-type name="to-type" input-type="text" value="" placeholder="message" autofocus {
-                }
-                #keyboard-ok-cancel .ok-cancel {
-                    (modal_cancel("keyboard-cancel"));
-                    (modal_ok("keyboard-ok"));
-                }
-            }
-        },
-    )
-}

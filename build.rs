@@ -1,11 +1,15 @@
 //! This build script touches the filesystem outside of the OUT_DIR directory.
 //! This should be fine since this is a binary crate.
 
-use std::{fs::{self, File}, io::Error, path::Path};
+use std::{
+    fs::{self},
+    io::Error,
+    path::Path,
+};
 
 use lightningcss::{
     bundler::{Bundler, FileProvider},
-    printer::{Printer, PrinterOptions},
+    printer::PrinterOptions,
     stylesheet,
 };
 use oxc::{
@@ -23,7 +27,7 @@ fn main() {
     let out_dir = "./dist";
     fs::create_dir_all(out_dir).unwrap();
 
-    let js_public = ["index.ts", "service-worker.js"];
+    let js_public = ["index.ts", "swapper.ts", "service-worker.js"];
     let css_public_roots = ["index.css", "slider.css"];
 
     // Rerun if these change

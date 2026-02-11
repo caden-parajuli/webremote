@@ -1,7 +1,7 @@
 use axum::extract::ws::{Message, WebSocket};
 use axum::extract::{State, WebSocketUpgrade};
 use axum::middleware;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Router, extract::Request};
 use futures_util::{
     SinkExt, StreamExt,
@@ -17,13 +17,16 @@ use tower_http::services::{ServeDir, ServeFile};
 use tracing::{error, info};
 
 use crate::AppState;
-use crate::index::index;
+use crate::pages::dialogs::keyboard_dialog;
+use crate::pages::index::index;
 use crate::messages::ClientMessage;
 
 pub async fn serve(state: AppState, dist_dir: &str, interface: &str) {
     let listener = tokio::net::TcpListener::bind(interface)
         .await
         .expect("Error binding port");
+
+    info!("Listening on {}", interface);
 
     axum::serve(listener, app(state, dist_dir).into_make_service())
         .await
@@ -44,6 +47,7 @@ fn app(state: AppState, dist_dir: &str) -> Router {
     Router::new()
         .route("/", get(index))
         .route("/ws", get(upgrade_handler))
+        .route("/keyboard-dialog", post(keyboard_dialog))
         .with_state(state)
         .nest_service("/favicon.ico", favicon)
         .nest_service("/service-worker.js", service_worker)

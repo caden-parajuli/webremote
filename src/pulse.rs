@@ -1,4 +1,4 @@
-use std::{iter::repeat_n, sync::Arc, time::Duration};
+use std::{iter::repeat_n, sync::Arc};
 
 use axum::extract::ws::Message;
 use pulseaudio::{
@@ -6,9 +6,8 @@ use pulseaudio::{
     protocol::{ChannelVolume, DEFAULT_SINK, SubscriptionMask, Volume},
 };
 use tokio::sync::{Mutex, broadcast::Sender};
-use tracing::info;
 
-use crate::{async_utils::retry_exponential, messages::ServerMessage};
+use crate::messages::ServerMessage;
 
 const VOLUME_NORM: u32 = 0x10000;
 
@@ -28,29 +27,6 @@ impl PulseState {
         let client = Client::from_env(c"WebRemote")?;
         Ok(PulseState { client })
     }
-    pub async fn new_retry(
-        runtime: &tokio::runtime::Runtime,
-        retries: usize,
-    ) -> Result<Self, ClientError> {
-        let initial_wait = Duration::from_millis(500);
-
-        let client = retry_exponential(
-            async |_| {
-                info!("Attempting to connect to PulseAudio");
-                runtime
-                    .spawn_blocking(|| Client::from_env(c"WebRemote"))
-                    .await
-                    .unwrap()
-            },
-            (),
-            retries,
-            initial_wait,
-        )
-        .await?;
-
-        Ok(PulseState { client })
-    }
-
     pub async fn get_volume(&self) -> Result<usize, ClientError> {
         let info = self
             .client
