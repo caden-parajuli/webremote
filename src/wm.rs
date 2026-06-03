@@ -69,6 +69,21 @@ impl WindowManager {
         };
     }
 
+    // pub async fn spawn_app(self, app: &App) {
+    //     match self {
+    //         WindowManager::Sway => {
+    //             if let Err(e) = self.sway_spawn_app(app) {
+    //                 error!("Sway exec: {}", e);
+    //             }
+    //         },
+    //         WindowManager::Hypr => {
+    //             if let Err(e) = self.hypr_spawn_app(app) {
+    //                 error!("Hyprland spawn app error: {}", e);
+    //             }
+    //         },
+    //     }
+    // }
+
     fn sway_switch_ws(&self, connection: &mut Connection, ws: usize) -> Result<(), Error> {
         let mut ws = ws.to_string();
 
@@ -162,7 +177,7 @@ impl WindowManager {
                 self.sway_switch_ws(connection, ws)?;
 
                 info!("Spawning app \"{}\"", app.pretty_name);
-                Ok(app.spawn()?)
+                Ok(self.sway_spawn_app(app, connection)?)
             }
         }
     }
@@ -178,8 +193,21 @@ impl WindowManager {
                 }
 
                 info!("Spawning app \"{}\"", app.pretty_name);
-                Ok(app.spawn()?)
+                Ok(self.hypr_spawn_app(app).await?)
             }
         }
+    }
+
+    fn sway_spawn_app(self, app: &App, connection: &mut Connection) -> Result<(), Error> {
+        let command = format!("exec \"{}\"", app.launch_command);
+        for outcome in connection.run_command(command)? {
+            outcome?;
+        }
+
+        Ok(())
+    }
+
+    async fn hypr_spawn_app(self, app: &App) -> Result<(), HyprError> {
+        Dispatch::call_async(DispatchType::Exec(&app.launch_command)).await
     }
 }

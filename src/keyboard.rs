@@ -1,6 +1,4 @@
-use std::{fmt::Display, process::Command, str::FromStr};
-
-use tracing::info;
+use std::{fmt::Display, str::FromStr};
 
 use crate::processes::try_ydotool;
 

@@ -1,12 +1,6 @@
 use maud::{Markup, html};
 
-use crate::{
-    keyboard::Key,
-    templates::{
-        modal::{modal, modal_cancel, modal_ok},
-        use_svg,
-    },
-};
+use crate::{keyboard::Key, templates::use_svg};
 
 pub fn use_arrow_svg(key: Key) -> Markup {
     let mut keyclass = key.to_string();

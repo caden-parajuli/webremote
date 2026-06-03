@@ -1,8 +1,3 @@
-use std::{
-    io::{Error, ErrorKind},
-    process::{Command, Stdio},
-};
-
 use confy::ConfigStrategy;
 use serde::{Deserialize, Serialize};
 
@@ -48,23 +43,6 @@ impl App {
 impl App {
     pub async fn switch_to(&self, wm: &WindowManager) {
         wm.goto_app(self).await;
-    }
-
-    pub fn spawn(&self) -> Result<(), Error> {
-        let parsed_command = shell_words::split(&self.launch_command)
-            .or(Err(Error::new(ErrorKind::Other, "Command parse error")))?;
-
-        let mut args = parsed_command.iter();
-        if let Some(command) = args.next() {
-            let _ = Command::new(command)
-                .args(args)
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .spawn();
-            Ok(())
-        } else {
-            Err(Error::new(ErrorKind::Other, "No launch command"))
-        }
     }
 
     pub fn icon_path(&self) -> String {
