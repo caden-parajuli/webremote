@@ -80,9 +80,22 @@ impl WindowManager {
     }
 
     async fn hypr_switch_ws(&self, ws: usize) -> Result<(), HyprError> {
-        Dispatch::call_async(DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Id(
-            ws as i32,
-        )))
+        info!("Switching workspace to {ws}");
+        if Dispatch::call_async(DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Name(&ws.to_string()))).await.is_err() {
+            return self.hypr_switch_next_open_ws().await;
+        }
+
+        Ok(())
+    }
+
+    async fn hypr_switch_next_open_ws(&self) -> Result<(), HyprError> {
+        info!("Switching to next available workspace");
+        Dispatch::call_async(DispatchType::Workspace(
+            WorkspaceIdentifierWithSpecial::Empty(FirstEmpty {
+                on_monitor: true,
+                next: false,
+            }),
+        ))
         .await?;
 
         Ok(())
@@ -141,35 +154,30 @@ impl WindowManager {
     }
 
     fn sway_goto_app(&self, connection: &mut Connection, app: &App) -> Result<(), Error> {
+        info!("Goto app (Sway): {}", app.pretty_name);
         match self.sway_find_app(&app.app_id, connection) {
             (Some(ws), _) => self.sway_switch_ws(connection, ws),
             (None, focused_ws) => {
                 let ws = app.default_workspace.unwrap_or(focused_ws);
                 self.sway_switch_ws(connection, ws)?;
 
+                info!("Spawning app \"{}\"", app.pretty_name);
                 Ok(app.spawn()?)
             }
         }
     }
 
     async fn hypr_goto_app(&self, app: &App) -> Result<(), HyprError> {
+        info!("Goto app (Hyprland): {}", app.pretty_name);
         match self.hypr_find_app(&app.app_id).await {
             Some(ws) => self.hypr_switch_ws(ws).await,
             None => {
                 match app.default_workspace {
                     Some(ws) => self.hypr_switch_ws(ws).await?,
-                    None => {
-                        Dispatch::call_async(DispatchType::Workspace(
-                            WorkspaceIdentifierWithSpecial::Empty(FirstEmpty {
-                                on_monitor: true,
-                                next: false,
-                            }),
-                        ))
-                        .await?;
-                    }
+                    None => self.hypr_switch_next_open_ws().await?,
                 }
 
-                info!("Spawning app");
+                info!("Spawning app \"{}\"", app.pretty_name);
                 Ok(app.spawn()?)
             }
         }

@@ -5,7 +5,7 @@ use futures_util::{SinkExt, stream::SplitSink};
 use mpris::{FindingError, PlayerFinder};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, broadcast::Sender};
-use tracing::error;
+use tracing::{error, warn};
 
 use crate::{
     AppState,
@@ -69,8 +69,9 @@ impl ClientMessage {
             ClientMessage::Type { message } => type_string(message),
             ClientMessage::GotoApp { name } => {
                 let config = state.config;
-                if let Some(app) = config.find_app_by_name(name) {
-                    app.switch_to(&config.window_manager).await;
+                match config.find_app_by_name(name) {
+                    Some(app) => app.switch_to(&config.window_manager).await,
+                    None => warn!("Couldn't find app in config"),
                 }
             }
             ClientMessage::GetVolume => match state.pulse_state.get_volume().await {
