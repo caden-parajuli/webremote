@@ -2,6 +2,8 @@ use std::{fmt::Display, process::Command, str::FromStr};
 
 use tracing::info;
 
+use crate::processes::try_ydotool;
+
 const ENTER: usize = 28;
 const UP: usize = 103;
 const LEFT: usize = 105;
@@ -76,29 +78,21 @@ impl Key {
 
     pub fn push(self) {
         let down_arg = usize::from(self).to_string() + ":1";
-
-        let _ = Command::new("ydotool").args(["key", &down_arg]).spawn();
+        try_ydotool(["key", &down_arg]);
     }
 
     pub fn release(self) {
         let up_arg = usize::from(self).to_string() + ":0";
-
-        let _ = Command::new("ydotool").args(["key", &up_arg]).spawn();
+        try_ydotool(["key", &up_arg]);
     }
 
     pub fn press(self) {
         let down_arg = usize::from(self).to_string() + ":1";
         let up_arg = usize::from(self).to_string() + ":0";
-
-        info!("Pressing ydotool: {}", self);
-        let _ = Command::new("ydotool")
-            .args(["key", &down_arg, &up_arg])
-            .spawn();
+        try_ydotool(["key", &down_arg, &up_arg]);
     }
 }
 
 pub fn type_string(text: &str) {
-    let _ = Command::new("ydotool")
-        .args(["type", text, "-d", "2ms"])
-        .spawn();
+    try_ydotool(["type", text, "-d", "2ms"]);
 }

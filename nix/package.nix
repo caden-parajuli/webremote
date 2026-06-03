@@ -21,6 +21,7 @@ rustPlatform.buildRustPackage(finalAttrs: {
      '';
 
   nativeBuildInputs = with pkgs; [
+    nix-prefetch-git
     openssl
     pkg-config
   ];

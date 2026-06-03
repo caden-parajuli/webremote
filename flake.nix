@@ -44,6 +44,7 @@
             with pkgs;
             mkShell rec {
               nativeBuildInputs = [
+                nix-prefetch-git
                 pkg-config
                 dbus
 

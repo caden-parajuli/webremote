@@ -100,6 +100,7 @@ in
       path = [ cfg.ydotoolPackage ] ++ wmPaths;
       environment = {
         YDOTOOL_SOCKET = cfg.ydotoolSocket;
+        HOME = "%h";
       };
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/webremote --interface ${cfg.interface} --port ${toString cfg.port} --config ${appConfigFile}";
